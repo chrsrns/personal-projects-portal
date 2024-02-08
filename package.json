@@ -1,0 +1,22 @@
+{
+  "name": "personal-projects-portal",
+  "version": "1.0.0",
+  "description": "This is my portal to all of the projects that I am proud of. ",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrsrns/personal-projects-portal.git"
+  },
+  "keywords": [
+    "personal"
+  ],
+  "author": "Christian Louise B. Aranas",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/chrsrns/personal-projects-portal/issues"
+  },
+  "homepage": "https://github.com/chrsrns/personal-projects-portal#readme"
+}
