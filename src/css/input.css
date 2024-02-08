@@ -244,3 +244,7 @@ textarea {
     page-break-after: avoid;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
