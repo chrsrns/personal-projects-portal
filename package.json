@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/chrsrns/personal-projects-portal/issues"
   },
-  "homepage": "https://github.com/chrsrns/personal-projects-portal#readme"
+  "homepage": "https://github.com/chrsrns/personal-projects-portal#readme",
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
+  }
 }
