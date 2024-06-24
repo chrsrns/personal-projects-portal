@@ -5,6 +5,7 @@ module.exports = {
     extend: {
       animation: {
         "octocat-wave": "octocat-wave 560ms ease-in-out",
+        rainbow: "glowing 10s linear infinite",
       },
       keyframes: {
         "octocat-wave": {
@@ -16,6 +17,17 @@ module.exports = {
           },
           "40%, 80%": {
             transform: "rotate(10deg)",
+          },
+        },
+        glowing: {
+          "0%": {
+            "background-position": "0 0",
+          },
+          "50%": {
+            "background-position": "100% 0",
+          },
+          "100%": {
+            "background-position": "0 0",
           },
         },
       },
