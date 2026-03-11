@@ -71,6 +71,16 @@ const clearEl = (el) => {
   }
 };
 
+const reAddSectionPlaceholder = (sectionEl) => {
+  for (const child of Array.from(sectionEl.children)) {
+    if (child.classList.contains("overlay-placeholder")) {
+      child.classList.add('opacity-100');
+      child.classList.remove('opacity-0');
+      child.classList.remove('hidden');
+    }
+  }
+}
+
 const el = (tag, attrs = {}, children = []) => {
   const svgTags = new Set([
     "svg",
@@ -209,6 +219,7 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
 
 const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
   const container = document.querySelector('.grid');
+  reAddSectionPlaceholder(container);
 
   try {
     const projects = await fetchBody(apiBaseUrl, `/resume/${resumeId}/portfolio_projects`);
@@ -251,7 +262,7 @@ const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
 ////////////////////////////////////////////////////////
 
 const generateSkeletonPlaceholders = () => {
-  const container = document.querySelector('.grid');
+  const container = document.querySelector('#projectsPlaceholderOverlay');
   if (!container) return;
 
   clearEl(container);
