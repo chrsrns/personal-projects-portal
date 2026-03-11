@@ -178,9 +178,12 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
 
     // Add project description if available
     if (p.description) {
-      contentDiv.appendChild(
-        el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: p.description })
-      );
+      const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
+      for (const paragraph of paragraphs) {
+        contentDiv.appendChild(
+          el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: paragraph })
+        );
+      }
     }
 
     // Add key points as separate paragraphs
