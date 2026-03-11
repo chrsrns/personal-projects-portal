@@ -226,9 +226,7 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
   const container = document.querySelector('.grid');
   if (!container) return;
 
-  clearEl(container);
-
-  for (const p of (projects || []).slice().sort(sortByDisplayOrder)) {
+  const renderProjectCard = (p) => {
     const href = p.project_link || p.source_code_link || "#";
     const noPreview = !p.project_link || String(p.project_link).trim() === "";
 
@@ -313,8 +311,39 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
     article.appendChild(imageLink);
     article.appendChild(contentDiv);
     card.appendChild(article);
-    container.appendChild(card);
-  }
+
+    return { card, img };
+  };
+
+  // Preload all images, then render cards
+  const preloadImages = async (projects) => {
+    const imageData = projects.map(p => renderProjectCard(p));
+
+    const preloadPromises = imageData.map(({ img }) => {
+      return new Promise((resolve) => {
+        if (img.complete) {
+          resolve();
+        } else {
+          img.onload = resolve;
+          img.onerror = resolve; // Continue even if image fails to load
+          // Start loading the image
+          img.src = img.src; // This triggers the load
+        }
+      });
+    });
+
+    // Wait for all images to load (or fail)
+    await Promise.all(preloadPromises);
+    clearEl(container);
+
+    // Now append all cards to the container
+    imageData.forEach(({ card }) => {
+      container.appendChild(card);
+    });
+  };
+
+  // Start the preloading process
+  preloadImages((projects || []).slice().sort(sortByDisplayOrder));
 };
 
 ////////////////////////////////////////////////////////
