@@ -235,8 +235,29 @@ const el = (tag, attrs = {}, children = []) => {
 const projectCardsById = new Map();
 let expandedProjectId = null;
 
-const expandCard = (id) => {
+const collapseCard = (id) => {
+  if (id == null) return;
   const data = projectCardsById.get(String(id));
+  if (!data) return;
+
+  data.card.setAttribute("aria-expanded", "false");
+
+  if (data.safeProjectLink) {
+    data.titleLink.replaceWith(data.titleContainer);
+    data.titleChildren.forEach((child) => data.titleContainer.appendChild(child));
+    data.titleLink.href = null;
+  }
+
+  expandedProjectId = null;
+};
+
+const expandCard = (id) => {
+  const targetId = String(id);
+  if (expandedProjectId === targetId) return;
+
+  collapseCard(expandedProjectId);
+
+  const data = projectCardsById.get(targetId);
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "true");
@@ -247,7 +268,7 @@ const expandCard = (id) => {
     data.titleContainer.replaceWith(data.titleLink);
   }
 
-  expandedProjectId = String(id);
+  expandedProjectId = targetId;
 };
 
 const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
@@ -551,5 +572,12 @@ if (document.readyState === "loading") {
 } else {
   void onReady();
 }
+
+document.addEventListener("click", (event) => {
+  const grid = document.querySelector(".grid");
+  if (grid && !grid.contains(event.target)) {
+    collapseCard(expandedProjectId);
+  }
+});
 
 module.exports = { renderProjects, createProjectCard };

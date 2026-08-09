@@ -395,6 +395,34 @@ test("collapsed card image and title are not links", () => {
   assert.strictEqual(card.getAttribute("data-project-id"), "1", "card should carry its project id");
 });
 
+test("only one project card is expanded at a time", () => {
+  const { app, doc } = setup();
+  const first = { id: 1, project_name: "First", project_link: "https://example.com/first" };
+  const second = { id: 2, project_name: "Second", project_link: "https://example.com/second" };
+  const { card: card1 } = app.createProjectCard(first, {}, {});
+  const { card: card2 } = app.createProjectCard(second, {}, {});
+
+  card1.click();
+  assert.strictEqual(card1.getAttribute("aria-expanded"), "true", "first card should be expanded");
+  assert.strictEqual(card2.getAttribute("aria-expanded"), "false", "second card should still be collapsed");
+
+  card2.click();
+  assert.strictEqual(card1.getAttribute("aria-expanded"), "false", "first card should collapse when second expands");
+  assert.strictEqual(card2.getAttribute("aria-expanded"), "true", "second card should be expanded");
+});
+
+test("click outside grid collapses expanded card", () => {
+  const { app, doc, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card } = app.createProjectCard(project, {}, {});
+  card.click();
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true");
+
+  const outside = new MockElement("div");
+  doc.dispatchEvent({ type: "click", target: outside });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "false", "expanded card should collapse on outside click");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
