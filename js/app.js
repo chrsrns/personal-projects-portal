@@ -312,6 +312,10 @@ const expandCard = (id) => {
   }
 
   updateGridTemplateRows(data.card);
+
+  const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  data.card.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
+
   expandedProjectId = targetId;
 };
 

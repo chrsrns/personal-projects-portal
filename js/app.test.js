@@ -520,6 +520,23 @@ test("keyboard and reduced motion are supported", () => {
   assert.strictEqual(video._played, 0, "video play should not be called when reduced motion is preferred");
 });
 
+test("expanded card scrolls into view", () => {
+  const { app, grid, win } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.ok(card._scrolled, "card should scroll into view when expanded");
+  assert.strictEqual(card._scrolled.block, "start", "scroll should align to the top of the card");
+
+  win.reducedMotion = true;
+  card._scrolled = false;
+  card.click();
+  card.click();
+  assert.strictEqual(card._scrolled.behavior, "auto", "reduced motion should use auto scroll behavior");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
