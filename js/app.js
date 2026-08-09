@@ -1,3 +1,5 @@
+const { isAllowedUrl } = require("./urlUtils");
+
 ////////////////////////////////////////////////////////
 // WebSocket Connection Helpers
 ////////////////////////////////////////////////////////
@@ -235,8 +237,12 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
   if (!container) return;
 
   const renderProjectCard = (p) => {
-    const href = p.project_link || p.source_code_link || "#";
-    const noPreview = !p.project_link || String(p.project_link).trim() === "";
+    const safeProjectLink = isAllowedUrl(p.project_link);
+    const safeSourceLink = isAllowedUrl(p.source_code_link);
+    const safeImageUrl = isAllowedUrl(p.image_url);
+
+    const href = safeProjectLink || safeSourceLink || "#";
+    const noPreview = !safeProjectLink;
 
     // Create project card structure
     const card = el("div", { class: "rounded-lg glow-on-hover" });
@@ -247,7 +253,7 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
     const imageLink = el("a", { href });
     const img = el("img", {
       alt: "",
-      src: p.image_url || "/img/placeholder.png",
+      src: safeImageUrl || "/img/placeholder.png",
       class: "h-full w-full rounded-xl object-cover shadow-xl transition"
     });
     imageLink.appendChild(img);
