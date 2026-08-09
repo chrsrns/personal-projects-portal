@@ -307,7 +307,8 @@ const expandCard = (id) => {
     data.spinner.classList.remove("hidden");
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
-    data.video.play();
+    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduced) data.video.play();
   }
 
   updateGridTemplateRows(data.card);
@@ -324,7 +325,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
 
   // Create project card structure
   const card = el("div", {
-    class: "rounded-lg glow-on-hover transition",
+    class: "rounded-lg glow-on-hover transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
     tabindex: "0",
     role: "button",
     "aria-expanded": "false",
@@ -359,11 +360,14 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   });
   mediaWrapper.appendChild(video);
 
+  const isReducedMotion = () =>
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   video.addEventListener("canplay", () => {
     video.classList.remove("hidden");
     img.classList.add("hidden");
     spinner.classList.add("hidden");
-    video.play();
+    if (!isReducedMotion()) video.play();
   });
 
   video.addEventListener("error", () => {
@@ -446,6 +450,15 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     const id = String(p.id);
     if (expandedProjectId === id) collapseCard(id);
     else expandCard(id);
+  });
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault && event.preventDefault();
+      const id = String(p.id);
+      if (expandedProjectId === id) collapseCard(id);
+      else expandCard(id);
+    }
   });
 
   return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, safeVideoUrl };

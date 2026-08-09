@@ -493,6 +493,33 @@ test("video playback is controlled on expand, collapse, and visibility change", 
   assert.ok(video._paused > 1, "pause should be called when the page is hidden");
 });
 
+test("keyboard and reduced motion are supported", () => {
+  const { app, win } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card, video } = app.createProjectCard(project, {}, {});
+
+  assert.strictEqual(card.getAttribute("role"), "button", "collapsed card should have role button");
+  assert.strictEqual(card.getAttribute("tabindex"), "0", "collapsed card should be focusable");
+  assert.ok(card.classList.contains("focus:outline-none") || card.classList.contains("focus-visible:ring-2"), "card should have a focus-visible ring class");
+  assert.ok(card.classList.contains("motion-reduce:transition-none"), "card should respect reduced motion for transitions");
+
+  card.dispatchEvent({ type: "keydown", key: "Enter" });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "Enter key should expand the card");
+
+  card.dispatchEvent({ type: "keydown", key: " " });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "false", "Space key should collapse the expanded card");
+
+  card.dispatchEvent({ type: "keydown", key: "Escape" });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "false", "Escape should keep the card collapsed");
+
+  card.dispatchEvent({ type: "keydown", key: "Enter" });
+  win.reducedMotion = true;
+  video._played = 0;
+  card.dispatchEvent({ type: "keydown", key: "Enter" });
+  card.click();
+  assert.strictEqual(video._played, 0, "video play should not be called when reduced motion is preferred");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
