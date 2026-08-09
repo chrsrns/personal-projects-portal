@@ -235,12 +235,33 @@ const el = (tag, attrs = {}, children = []) => {
 const projectCardsById = new Map();
 let expandedProjectId = null;
 
+const resetGridTemplateRows = (grid) => {
+  if (!grid) return;
+  grid.style.gridTemplateRows = "";
+};
+
+const updateGridTemplateRows = (card) => {
+  const grid = card && card.parentNode;
+  if (!grid) return;
+
+  const cards = Array.from(grid.children).filter((c) => !c.classList.contains("overlay-placeholder"));
+  const expandedIndex = cards.indexOf(card);
+  if (expandedIndex === -1) return;
+
+  const rows = cards.map((_, i) => (i === expandedIndex ? "1fr" : "auto"));
+  grid.style.gridTemplateRows = rows.join(" ");
+};
+
 const collapseCard = (id) => {
   if (id == null) return;
   const data = projectCardsById.get(String(id));
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "false");
+  data.card.classList.remove("col-span-full", "h-full", "lg:flex-row", "overflow-hidden");
+  data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
+  data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
+  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
 
   if (data.safeProjectLink) {
     data.titleLink.replaceWith(data.titleContainer);
@@ -248,6 +269,7 @@ const collapseCard = (id) => {
     data.titleLink.href = null;
   }
 
+  resetGridTemplateRows(data.card.parentNode);
   expandedProjectId = null;
 };
 
@@ -261,6 +283,10 @@ const expandCard = (id) => {
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "true");
+  data.card.classList.add("col-span-full", "h-full", "lg:flex-row", "overflow-hidden");
+  data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
+  data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
+  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
 
   if (data.safeProjectLink) {
     data.titleLink.href = data.safeProjectLink;
@@ -268,6 +294,7 @@ const expandCard = (id) => {
     data.titleContainer.replaceWith(data.titleLink);
   }
 
+  updateGridTemplateRows(data.card);
   expandedProjectId = targetId;
 };
 

@@ -423,6 +423,22 @@ test("click outside grid collapses expanded card", () => {
   assert.strictEqual(card.getAttribute("aria-expanded"), "false", "expanded card should collapse on outside click");
 });
 
+test("expanded card spans full grid row and uses flex layout", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card, mediaWrapper, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.ok(card.classList.contains("col-span-full"), "expanded card should span full grid column");
+  assert.ok(card.classList.contains("h-full"), "expanded card should fill the grid track");
+  assert.ok(card.classList.contains("lg:flex-row") || card.querySelector("article").classList.contains("lg:flex-row"), "expanded card should use a row flex layout on large screens");
+  assert.ok(mediaWrapper.classList.contains("h-1/2") || mediaWrapper.classList.contains("lg:h-full"), "media wrapper should have a defined height");
+  assert.ok(contentDiv.classList.contains("h-1/2") || contentDiv.classList.contains("lg:h-full"), "content wrapper should have a defined height");
+  assert.ok(contentDiv.classList.contains("overflow-y-auto"), "content wrapper should scroll when overflowing");
+  assert.ok(String(grid.style.gridTemplateRows).includes("1fr"), "grid should have a 1fr row for the expanded card");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
