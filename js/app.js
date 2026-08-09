@@ -232,106 +232,117 @@ const el = (tag, attrs = {}, children = []) => {
 // Section Rendering
 ////////////////////////////////////////////////////////
 
+const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
+  const safeProjectLink = isAllowedUrl(p.project_link);
+  const safeSourceLink = isAllowedUrl(p.source_code_link);
+  const safeImageUrl = isAllowedUrl(p.image_url);
+  const safeVideoUrl = isAllowedUrl(p.video);
+
+  const href = safeProjectLink || safeSourceLink || "#";
+  const noPreview = !safeProjectLink;
+
+  // Create project card structure
+  const card = el("div", { class: "rounded-lg glow-on-hover" });
+
+  const article = el("article", { class: "group" });
+
+  // Image container with link
+  const imageLink = el("a", { href });
+  const img = el("img", {
+    alt: "",
+    src: safeImageUrl || "/img/placeholder.png",
+    class: "h-full w-full rounded-xl object-cover shadow-xl transition"
+  });
+  imageLink.appendChild(img);
+
+  const video = el("video", {
+    class: "hidden h-full w-full object-contain",
+    muted: true,
+    controls: true,
+    loop: true,
+    playsinline: true,
+    autoplay: true,
+  });
+
+  // Content container
+  const contentDiv = el("div", { class: "p-4" });
+
+  // Title with optional "Preview not available" badge
+  const titleLink = el("a", { href });
+  const titleChildren = [el("h3", {
+    class: "text-lg font-medium text-gray-900",
+    text: p.project_name || ""
+  })];
+
+  if (noPreview) {
+    titleChildren.push(
+      el("span", {
+        class: "inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-yellow-700"
+      }, [
+        el("p", { class: "whitespace-nowrap text-sm", text: "Preview not available" })
+      ])
+    );
+  }
+
+  // Wrap title and badge in a div if badge exists
+  const titleContent = noPreview
+    ? el("div", { class: "flex flex-wrap gap-2" }, titleChildren)
+    : titleChildren[0];
+
+  titleLink.appendChild(titleContent);
+  contentDiv.appendChild(titleLink);
+
+  // Description paragraphs
+  const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
+
+  // Add project description if available
+  if (p.description) {
+    const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
+    for (const paragraph of paragraphs) {
+      contentDiv.appendChild(
+        el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: paragraph })
+      );
+    }
+  }
+
+  // Add key points as separate paragraphs
+  for (const point of points.slice().sort(sortByDisplayOrder)) {
+    if (point.key_point) {
+      contentDiv.appendChild(
+        el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: point.key_point })
+      );
+    }
+  }
+
+  // Technology tags
+  const techWrap = el("div", { class: "flex flex-wrap gap-2" });
+  const techs = (techByProjectId && techByProjectId[p.id]) || [];
+  for (const t of techs.slice().sort(sortByDisplayOrder)) {
+    techWrap.appendChild(
+      el("span", {
+        class: "inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700"
+      }, [
+        el("p", { class: "whitespace-nowrap text-sm", text: t.technology_name || "" })
+      ])
+    );
+  }
+
+  contentDiv.appendChild(techWrap);
+  article.appendChild(imageLink);
+  article.appendChild(video);
+  article.appendChild(contentDiv);
+  card.appendChild(article);
+
+  return { card, img, video, titleLink, contentDiv, safeVideoUrl };
+};
+
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
   const container = document.querySelector('.grid');
   if (!container) return;
 
-  const renderProjectCard = (p) => {
-    const safeProjectLink = isAllowedUrl(p.project_link);
-    const safeSourceLink = isAllowedUrl(p.source_code_link);
-    const safeImageUrl = isAllowedUrl(p.image_url);
-
-    const href = safeProjectLink || safeSourceLink || "#";
-    const noPreview = !safeProjectLink;
-
-    // Create project card structure
-    const card = el("div", { class: "rounded-lg glow-on-hover" });
-
-    const article = el("article", { class: "group" });
-
-    // Image container with link
-    const imageLink = el("a", { href });
-    const img = el("img", {
-      alt: "",
-      src: safeImageUrl || "/img/placeholder.png",
-      class: "h-full w-full rounded-xl object-cover shadow-xl transition"
-    });
-    imageLink.appendChild(img);
-
-    // Content container
-    const contentDiv = el("div", { class: "p-4" });
-
-    // Title with optional "Preview not available" badge
-    const titleLink = el("a", { href });
-    const titleChildren = [el("h3", {
-      class: "text-lg font-medium text-gray-900",
-      text: p.project_name || ""
-    })];
-
-    if (noPreview) {
-      titleChildren.push(
-        el("span", {
-          class: "inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-yellow-700"
-        }, [
-          el("p", { class: "whitespace-nowrap text-sm", text: "Preview not available" })
-        ])
-      );
-    }
-
-    // Wrap title and badge in a div if badge exists
-    const titleContent = noPreview
-      ? el("div", { class: "flex flex-wrap gap-2" }, titleChildren)
-      : titleChildren[0];
-
-    titleLink.appendChild(titleContent);
-    contentDiv.appendChild(titleLink);
-
-    // Description paragraphs
-    const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
-
-    // Add project description if available
-    if (p.description) {
-      const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
-      for (const paragraph of paragraphs) {
-        contentDiv.appendChild(
-          el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: paragraph })
-        );
-      }
-    }
-
-    // Add key points as separate paragraphs
-    for (const point of points.slice().sort(sortByDisplayOrder)) {
-      if (point.key_point) {
-        contentDiv.appendChild(
-          el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: point.key_point })
-        );
-      }
-    }
-
-    // Technology tags
-    const techWrap = el("div", { class: "flex flex-wrap gap-2" });
-    const techs = (techByProjectId && techByProjectId[p.id]) || [];
-    for (const t of techs.slice().sort(sortByDisplayOrder)) {
-      techWrap.appendChild(
-        el("span", {
-          class: "inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700"
-        }, [
-          el("p", { class: "whitespace-nowrap text-sm", text: t.technology_name || "" })
-        ])
-      );
-    }
-
-    contentDiv.appendChild(techWrap);
-    article.appendChild(imageLink);
-    article.appendChild(contentDiv);
-    card.appendChild(article);
-
-    return { card, img };
-  };
-
   // Preload all images, then render cards
   const preloadImages = async (projects) => {
-    const imageData = projects.map(p => renderProjectCard(p));
+    const imageData = projects.map(p => createProjectCard(p, keyPointsByProjectId, techByProjectId));
 
     const preloadPromises = imageData.map(({ img }) => {
       return new Promise((resolve) => {
@@ -509,4 +520,4 @@ if (document.readyState === "loading") {
   void onReady();
 }
 
-module.exports = { renderProjects };
+module.exports = { renderProjects, createProjectCard };

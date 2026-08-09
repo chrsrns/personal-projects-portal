@@ -229,6 +229,8 @@ class MockElement {
   click() { this.dispatchEvent({ type: "click", target: this }); }
 }
 
+class MockSVGElement extends MockElement {}
+
 class MockDocument extends MockElement {
   constructor() {
     super("document");
@@ -239,6 +241,14 @@ class MockDocument extends MockElement {
   }
   getElementById(id) {
     return this.querySelector(`#${id}`);
+  }
+  createElementNS(ns, tag) {
+    const svgTags = new Set([
+      "svg", "path", "g", "use", "text", "view", "title", "desc", "defs", "clipPath", "mask", "pattern",
+      "rect", "circle", "line", "polyline", "polygon", "ellipse", "linearGradient", "stop"
+    ]);
+    if (svgTags.has(tag)) return new MockSVGElement(tag);
+    return this.createElement(tag);
   }
   createElement(tag) {
     if (tag === "img") {
@@ -328,6 +338,7 @@ function setup() {
 
   global.window = win;
   global.document = doc;
+  global.SVGElement = MockSVGElement;
   global.fetch = createMockFetch();
   global.WebSocket = MockWebSocket;
 
@@ -340,6 +351,21 @@ function setup() {
 test("DOM test infrastructure loads app module with mock DOM", () => {
   const { app } = setup();
   assert.ok(app, "app module should export an object");
+});
+
+test("project video URL is allow-listed before src", () => {
+  const { app } = setup();
+  const validProject = { id: 1, project_name: "Valid", video: "https://example.com/video.mp4" };
+  const { video, safeVideoUrl } = app.createProjectCard(validProject, {}, {});
+  assert.ok(video, "valid video project should have a video element");
+  assert.strictEqual(safeVideoUrl, "https://example.com/video.mp4", "safeVideoUrl should be set to an allowed URL");
+  assert.strictEqual(video.src, "", "video src should not be set until the card is expanded");
+
+  const invalidProject = { id: 2, project_name: "Invalid", video: "javascript:alert(1)" };
+  const { video: video2, safeVideoUrl: safeVideoUrl2 } = app.createProjectCard(invalidProject, {}, {});
+  assert.ok(video2, "invalid video project should still keep a video element placeholder");
+  assert.strictEqual(safeVideoUrl2, null, "unsafe video URL should not pass the allow-list");
+  assert.strictEqual(video2.src, "", "video src should remain empty for an invalid URL");
 });
 
 test("index.html has flex viewport layout", () => {
