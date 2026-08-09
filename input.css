@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+/* `octocat-wave` keyframe and `github-corner` group are defined in tailwind.config.js and used in index.html. */
+
 @layer components {
   .glow-on-hover {
     @apply border-none outline-none cursor-pointer relative z-0 rounded-lg
