@@ -20,7 +20,7 @@
     "build:css": "npx tailwindcss -i input.css -o css/style.css",
     "prebuild": "npm run build:css",
     "prestart": "npm run build:css",
-    "verify:css": "npx tailwindcss -i input.css -o /tmp/style-verify.css && diff -q css/style.css /tmp/style-verify.css && ! grep -E 'w-\\\\[this-is|weird-and-invalid|text-\\\\[#336699|content-\\\\[' /tmp/style-verify.css",
+    "verify:css": "npx tailwindcss -i input.css -o /tmp/style-verify.css && diff -q css/style.css /tmp/style-verify.css && ! grep -F -e 'this-is' -e 'weird-and-invalid' -e '336699' /tmp/style-verify.css",
     "start": "webpack serve --open --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js"
   },
