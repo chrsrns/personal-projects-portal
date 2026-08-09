@@ -43,14 +43,22 @@ const handleWebSocketMessage = (event) => {
 };
 
 const createWebSocketConnection = (apiBaseUrl, resumeId, authToken = null) => {
-  // Sanitize apiBaseUrl: remove protocol prefix and trailing slashes
-  const sanitizedUrl = apiBaseUrl
-    .replace(/^https?:\/\//, '')
-    .replace(/\/+$/, '');
-
   // Determine protocol (wss for HTTPS, ws for HTTP)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsUrl = `${protocol}//${sanitizedUrl}/ws`;
+
+  let wsHostPath;
+  if (/^https?:\/\//.test(apiBaseUrl)) {
+    // Absolute URL: strip protocol and trailing slashes
+    wsHostPath = apiBaseUrl
+      .replace(/^https?:\/\//, '')
+      .replace(/\/+$/, '');
+  } else {
+    // Relative URL: prepend current host and strip trailing slashes
+    const base = apiBaseUrl.replace(/\/+$/, '');
+    wsHostPath = `${window.location.host}${base}`;
+  }
+
+  const wsUrl = `${protocol}//${wsHostPath}/ws`;
 
   const ws = new WebSocket(wsUrl);
 
