@@ -162,6 +162,19 @@ class MockElement {
     }
     return child;
   }
+  replaceChild(newChild, oldChild) {
+    const i = this._children.indexOf(oldChild);
+    if (i === -1) return oldChild;
+    if (newChild._parent) newChild._parent.removeChild(newChild);
+    this._children[i] = newChild;
+    newChild._parent = this;
+    oldChild._parent = null;
+    return oldChild;
+  }
+  replaceWith(newChild) {
+    if (!this._parent) return;
+    this._parent.replaceChild(newChild, this);
+  }
   insertBefore(child, before) {
     if (child._parent) child._parent.removeChild(child);
     const i = this._children.indexOf(before);
@@ -366,6 +379,32 @@ test("project video URL is allow-listed before src", () => {
   assert.ok(video2, "invalid video project should still keep a video element placeholder");
   assert.strictEqual(safeVideoUrl2, null, "unsafe video URL should not pass the allow-list");
   assert.strictEqual(video2.src, "", "video src should remain empty for an invalid URL");
+});
+
+test("collapsed card image and title are not links", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card, img, contentDiv } = app.createProjectCard(project, {}, {});
+  assert.notStrictEqual(img.parentNode.tagName, "A", "image should not be inside an a tag when collapsed");
+  const h3 = contentDiv.querySelector("h3");
+  assert.ok(h3, "title heading should exist");
+  assert.notStrictEqual(h3.parentNode.tagName, "A", "title heading should not be inside an a tag when collapsed");
+  assert.strictEqual(card.getAttribute("role"), "button", "collapsed card should have role button");
+  assert.strictEqual(card.getAttribute("tabindex"), "0", "collapsed card should be keyboard focusable");
+  assert.strictEqual(card.getAttribute("aria-expanded"), "false", "collapsed card should have aria-expanded false");
+  assert.strictEqual(card.getAttribute("data-project-id"), "1", "card should carry its project id");
+});
+
+test("clicking a collapsed card expands it", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  assert.strictEqual(card.getAttribute("aria-expanded"), "false");
+  card.click();
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should have aria-expanded true after click");
+  const h3 = contentDiv.querySelector("h3");
+  assert.strictEqual(h3.parentNode.tagName, "A", "title should be wrapped in a link after expand");
+  assert.strictEqual(h3.parentNode.getAttribute("href"), "https://example.com/project", "title link should point to the project link");
 });
 
 test("index.html has flex viewport layout", () => {

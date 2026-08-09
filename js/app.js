@@ -232,28 +232,51 @@ const el = (tag, attrs = {}, children = []) => {
 // Section Rendering
 ////////////////////////////////////////////////////////
 
+const projectCardsById = new Map();
+let expandedProjectId = null;
+
+const expandCard = (id) => {
+  const data = projectCardsById.get(String(id));
+  if (!data) return;
+
+  data.card.setAttribute("aria-expanded", "true");
+
+  if (data.safeProjectLink) {
+    data.titleLink.href = data.safeProjectLink;
+    data.titleChildren.forEach((child) => data.titleLink.appendChild(child));
+    data.titleContainer.replaceWith(data.titleLink);
+  }
+
+  expandedProjectId = String(id);
+};
+
 const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const safeProjectLink = isAllowedUrl(p.project_link);
   const safeSourceLink = isAllowedUrl(p.source_code_link);
   const safeImageUrl = isAllowedUrl(p.image_url);
   const safeVideoUrl = isAllowedUrl(p.video);
 
-  const href = safeProjectLink || safeSourceLink || "#";
   const noPreview = !safeProjectLink;
 
   // Create project card structure
-  const card = el("div", { class: "rounded-lg glow-on-hover" });
+  const card = el("div", {
+    class: "rounded-lg glow-on-hover transition",
+    tabindex: "0",
+    role: "button",
+    "aria-expanded": "false",
+    "data-project-id": String(p.id)
+  });
 
   const article = el("article", { class: "group" });
 
-  // Image container with link
-  const imageLink = el("a", { href });
+  // Media wrapper contains image and optional video; no link while collapsed
+  const mediaWrapper = el("div", { class: "relative" });
   const img = el("img", {
     alt: "",
     src: safeImageUrl || "/img/placeholder.png",
     class: "h-full w-full rounded-xl object-cover shadow-xl transition"
   });
-  imageLink.appendChild(img);
+  mediaWrapper.appendChild(img);
 
   const video = el("video", {
     class: "hidden h-full w-full object-contain",
@@ -263,16 +286,18 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     playsinline: true,
     autoplay: true,
   });
+  mediaWrapper.appendChild(video);
 
   // Content container
   const contentDiv = el("div", { class: "p-4" });
 
   // Title with optional "Preview not available" badge
-  const titleLink = el("a", { href });
-  const titleChildren = [el("h3", {
-    class: "text-lg font-medium text-gray-900",
-    text: p.project_name || ""
-  })];
+  const titleChildren = [
+    el("h3", {
+      class: "text-lg font-medium text-gray-900",
+      text: p.project_name || ""
+    })
+  ];
 
   if (noPreview) {
     titleChildren.push(
@@ -284,13 +309,11 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     );
   }
 
-  // Wrap title and badge in a div if badge exists
-  const titleContent = noPreview
-    ? el("div", { class: "flex flex-wrap gap-2" }, titleChildren)
-    : titleChildren[0];
+  const titleContainer = el("div", { class: "flex flex-wrap gap-2" }, titleChildren);
+  contentDiv.appendChild(titleContainer);
 
-  titleLink.appendChild(titleContent);
-  contentDiv.appendChild(titleLink);
+  // The expanded title link is created detached; children are moved in on expand
+  const titleLink = el("a", { class: "flex flex-wrap gap-2" });
 
   // Description paragraphs
   const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
@@ -328,17 +351,26 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   }
 
   contentDiv.appendChild(techWrap);
-  article.appendChild(imageLink);
-  article.appendChild(video);
+  article.appendChild(mediaWrapper);
   article.appendChild(contentDiv);
   card.appendChild(article);
 
-  return { card, img, video, titleLink, contentDiv, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  projectCardsById.set(String(p.id), cardData);
+
+  card.addEventListener("click", () => {
+    expandCard(String(p.id));
+  });
+
+  return { card, img, video, mediaWrapper, titleLink, contentDiv, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
   const container = document.querySelector('.grid');
   if (!container) return;
+
+  projectCardsById.clear();
+  expandedProjectId = null;
 
   // Preload all images, then render cards
   const preloadImages = async (projects) => {
