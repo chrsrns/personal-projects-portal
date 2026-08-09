@@ -258,7 +258,8 @@ const collapseCard = (id) => {
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "false");
-  data.card.classList.remove("col-span-full", "h-full", "lg:flex-row", "overflow-hidden");
+  data.card.classList.remove("col-span-full", "h-full", "lg:flex-row", "overflow-hidden", "shadow-2xl");
+  data.card.classList.add("shadow-xl");
   data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
   data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
@@ -291,7 +292,8 @@ const expandCard = (id) => {
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "true");
-  data.card.classList.add("col-span-full", "h-full", "lg:flex-row", "overflow-hidden");
+  data.card.classList.remove("shadow-xl");
+  data.card.classList.add("col-span-full", "h-full", "lg:flex-row", "overflow-hidden", "shadow-2xl");
   data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
   data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
@@ -329,7 +331,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
 
   // Create project card structure
   const card = el("div", {
-    class: "rounded-lg glow-on-hover transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
+    class: "rounded-lg glow-on-hover shadow-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
     tabindex: "0",
     role: "button",
     "aria-expanded": "false",
@@ -671,6 +673,11 @@ document.addEventListener("visibilitychange", () => {
   } else {
     data.video.play();
   }
+});
+
+window.addEventListener("resize", () => {
+  const data = projectCardsById.get(expandedProjectId);
+  if (data) updateGridTemplateRows(data.card);
 });
 
 module.exports = { renderProjects, createProjectCard };

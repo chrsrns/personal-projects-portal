@@ -548,6 +548,27 @@ test("expanded card content scrolls independently", () => {
   assert.ok(contentDiv.classList.contains("h-1/2") || contentDiv.classList.contains("lg:h-full"), "content wrapper should have a constrained height");
 });
 
+test("card has transition classes and re-layouts on resize", () => {
+  const { app, grid, win } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  assert.ok(card.classList.contains("transition"), "card should have a transition class");
+
+  card.click();
+  assert.ok(card.classList.contains("shadow-2xl"), "expanded card should have an emphasized shadow");
+  assert.ok(String(grid.style.gridTemplateRows).includes("1fr"), "grid should have a 1fr row");
+
+  const second = { id: 2, project_name: "S", project_link: "https://example.com/second" };
+  const { card: card2 } = app.createProjectCard(second, {}, {});
+  grid.insertBefore(card2, card);
+
+  win.dispatchEvent({ type: "resize" });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should stay expanded after resize");
+  assert.ok(String(grid.style.gridTemplateRows).includes("1fr"), "grid should still have a 1fr row after resize re-layout");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
