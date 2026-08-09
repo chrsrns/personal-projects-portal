@@ -508,3 +508,5 @@ if (document.readyState === "loading") {
 } else {
   void onReady();
 }
+
+module.exports = { renderProjects };
