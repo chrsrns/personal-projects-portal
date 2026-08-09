@@ -537,6 +537,17 @@ test("expanded card scrolls into view", () => {
   assert.strictEqual(card._scrolled.behavior, "auto", "reduced motion should use auto scroll behavior");
 });
 
+test("expanded card content scrolls independently", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.ok(contentDiv.classList.contains("overflow-y-auto"), "content wrapper should allow vertical scrolling");
+  assert.ok(contentDiv.classList.contains("h-1/2") || contentDiv.classList.contains("lg:h-full"), "content wrapper should have a constrained height");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
