@@ -588,6 +588,14 @@ test("clicking a collapsed card expands it", () => {
   assert.strictEqual(h3.parentNode.getAttribute("href"), "https://example.com/project", "title link should point to the project link");
 });
 
+test("generated css contains expanded card utilities", () => {
+  const css = fs.readFileSync(path.resolve(__dirname, "..", "css", "style.css"), "utf8");
+  assert.ok(css.includes(".col-span-full"), "css should contain the custom col-span-full utility");
+  assert.ok(css.includes(".min-h-dvh"), "css should contain min-h-dvh");
+  assert.ok(css.includes(".focus-visible\\:ring-2"), "css should contain focus-visible ring utilities");
+  assert.ok(css.includes(".motion-reduce\\:transition-none"), "css should contain motion-reduce transition utility");
+});
+
 test("index.html has flex viewport layout", () => {
   const html = fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8");
   assert.ok(/<body[^>]*class="[^"]*flex flex-col min-h-dvh[^"]*"/.test(html), "body should be a flex column with min-h-dvh");

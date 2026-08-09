@@ -6,9 +6,13 @@ module.exports = {
     "!./src/**",
     "!./dist/**",
     "!./docs/**",
+    "!./js/*.test.js",
   ],
   theme: {
     extend: {
+      gridColumn: {
+        full: "1 / -1",
+      },
       animation: {
         "octocat-wave": "octocat-wave 560ms ease-in-out",
         rainbow: "glowing 10s linear infinite",
