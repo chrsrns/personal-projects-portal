@@ -569,6 +569,13 @@ test("card has transition classes and re-layouts on resize", () => {
   assert.ok(String(grid.style.gridTemplateRows).includes("1fr"), "grid should still have a 1fr row after resize re-layout");
 });
 
+test("video uses object-contain within its half", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", video: "https://example.com/video.mp4" };
+  const { video } = app.createProjectCard(project, {}, {});
+  assert.ok(video.classList.contains("object-contain"), "video should use object-contain");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
