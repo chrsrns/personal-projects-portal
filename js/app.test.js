@@ -439,6 +439,36 @@ test("expanded card spans full grid row and uses flex layout", () => {
   assert.ok(String(grid.style.gridTemplateRows).includes("1fr"), "grid should have a 1fr row for the expanded card");
 });
 
+test("video lazy-loads on expand and falls back to image on error", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card, img, video } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.strictEqual(video.src, "https://example.com/video.mp4", "video src should be set lazily on expand");
+  assert.ok(!img.classList.contains("hidden"), "image should be visible while video is loading");
+  assert.ok(video.classList.contains("hidden"), "video should be hidden while it is loading");
+
+  const spinner = card.querySelector(".absolute.inset-0");
+  assert.ok(spinner, "spinner element should exist");
+  assert.ok(!spinner.classList.contains("hidden"), "spinner should be visible while video is loading");
+
+  video.dispatchEvent("canplay");
+  assert.ok(img.classList.contains("hidden"), "image should be hidden when video can play");
+  assert.ok(!video.classList.contains("hidden"), "video should be shown on canplay");
+  assert.ok(video._played > 0, "video should attempt to play when it can");
+
+  const errorProject = { id: 2, project_name: "E", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card: card2, img: img2, video: video2 } = app.createProjectCard(errorProject, {}, {});
+  grid.appendChild(card2);
+  card2.click();
+  assert.strictEqual(video2.src, "https://example.com/video.mp4");
+  video2.dispatchEvent("error");
+  assert.ok(!img2.classList.contains("hidden"), "image should remain visible on video error");
+  assert.ok(video2.classList.contains("hidden"), "video should remain hidden on error");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };

@@ -269,6 +269,14 @@ const collapseCard = (id) => {
     data.titleLink.href = null;
   }
 
+  if (data.safeVideoUrl) {
+    data.video.pause();
+    data.video.src = "";
+    data.video.classList.add("hidden");
+    data.img.classList.remove("hidden");
+    data.spinner.classList.add("hidden");
+  }
+
   resetGridTemplateRows(data.card.parentNode);
   expandedProjectId = null;
 };
@@ -292,6 +300,13 @@ const expandCard = (id) => {
     data.titleLink.href = data.safeProjectLink;
     data.titleChildren.forEach((child) => data.titleLink.appendChild(child));
     data.titleContainer.replaceWith(data.titleLink);
+  }
+
+  if (data.safeVideoUrl) {
+    data.video.src = data.safeVideoUrl;
+    data.spinner.classList.remove("hidden");
+    data.video.classList.add("hidden");
+    data.img.classList.remove("hidden");
   }
 
   updateGridTemplateRows(data.card);
@@ -326,6 +341,13 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   });
   mediaWrapper.appendChild(img);
 
+  const spinner = el("div", {
+    class: "absolute inset-0 hidden items-center justify-center text-sm text-gray-500"
+  }, [
+    el("span", { text: "Loading video…" })
+  ]);
+  mediaWrapper.appendChild(spinner);
+
   const video = el("video", {
     class: "hidden h-full w-full object-contain",
     muted: true,
@@ -335,6 +357,19 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     autoplay: true,
   });
   mediaWrapper.appendChild(video);
+
+  video.addEventListener("canplay", () => {
+    video.classList.remove("hidden");
+    img.classList.add("hidden");
+    spinner.classList.add("hidden");
+    video.play();
+  });
+
+  video.addEventListener("error", () => {
+    spinner.classList.add("hidden");
+    video.classList.add("hidden");
+    img.classList.remove("hidden");
+  });
 
   // Content container
   const contentDiv = el("div", { class: "p-4" });
@@ -403,14 +438,14 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   article.appendChild(contentDiv);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, spinner, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
     expandCard(String(p.id));
   });
 
-  return { card, img, video, mediaWrapper, titleLink, contentDiv, safeVideoUrl };
+  return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
