@@ -17,6 +17,10 @@
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build:css": "npx tailwindcss -i input.css -o css/style.css",
+    "prebuild": "npm run build:css",
+    "prestart": "npm run build:css",
+    "verify:css": "npx tailwindcss -i input.css -o /tmp/style-verify.css && diff -q css/style.css /tmp/style-verify.css && ! grep -E 'w-\\\\[this-is|weird-and-invalid|text-\\\\[#336699|content-\\\\[' /tmp/style-verify.css",
     "start": "webpack serve --open --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js"
   },
