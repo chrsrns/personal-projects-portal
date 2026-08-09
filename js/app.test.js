@@ -1,5 +1,6 @@
 const { test } = require("node:test");
 const assert = require("node:assert");
+const fs = require("fs");
 const path = require("path");
 
 const APP_PATH = path.resolve(__dirname, "app.js");
@@ -339,4 +340,12 @@ function setup() {
 test("DOM test infrastructure loads app module with mock DOM", () => {
   const { app } = setup();
   assert.ok(app, "app module should export an object");
+});
+
+test("index.html has flex viewport layout", () => {
+  const html = fs.readFileSync(path.resolve(__dirname, "..", "index.html"), "utf8");
+  assert.ok(/<body[^>]*class="[^"]*flex flex-col min-h-dvh[^"]*"/.test(html), "body should be a flex column with min-h-dvh");
+  assert.ok(/<header[^>]*class="[^"]*flex-shrink-0[^"]*"/.test(html), "header should be flex-shrink-0");
+  assert.ok(/<main[^>]*class="[^"]*flex-1[^"]*"/.test(html), "main wrapper should be flex-1");
+  assert.ok(/class="[^"]*relative grid h-full[^"]*"/.test(html), "inner grid should be h-full");
 });
