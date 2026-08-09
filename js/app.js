@@ -307,6 +307,7 @@ const expandCard = (id) => {
     data.spinner.classList.remove("hidden");
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
+    data.video.play();
   }
 
   updateGridTemplateRows(data.card);
@@ -442,7 +443,9 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
-    expandCard(String(p.id));
+    const id = String(p.id);
+    if (expandedProjectId === id) collapseCard(id);
+    else expandCard(id);
   });
 
   return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, safeVideoUrl };
@@ -639,6 +642,17 @@ document.addEventListener("click", (event) => {
   const grid = document.querySelector(".grid");
   if (grid && !grid.contains(event.target)) {
     collapseCard(expandedProjectId);
+  }
+});
+
+document.addEventListener("visibilitychange", () => {
+  const data = projectCardsById.get(expandedProjectId);
+  if (!data || !data.safeVideoUrl) return;
+
+  if (document.hidden) {
+    data.video.pause();
+  } else {
+    data.video.play();
   }
 });
 

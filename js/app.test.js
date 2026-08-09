@@ -469,6 +469,30 @@ test("video lazy-loads on expand and falls back to image on error", () => {
   assert.ok(video2.classList.contains("hidden"), "video should remain hidden on error");
 });
 
+test("video playback is controlled on expand, collapse, and visibility change", () => {
+  const { app, doc, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card, video } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  assert.strictEqual(video.getAttribute("autoplay"), "true", "video should have autoplay attribute");
+  assert.strictEqual(video.getAttribute("muted"), "true", "video should be muted");
+  assert.strictEqual(video.getAttribute("controls"), "true", "video should have controls");
+  assert.strictEqual(video.getAttribute("loop"), "true", "video should loop");
+
+  card.click();
+  assert.ok(video._played > 0, "play should be called when the card is expanded");
+
+  card.click();
+  assert.ok(video._paused > 0, "pause should be called when the card is collapsed");
+
+  // Expand again, then hide the page
+  card.click();
+  doc.hidden = true;
+  doc.dispatchEvent({ type: "visibilitychange" });
+  assert.ok(video._paused > 1, "pause should be called when the page is hidden");
+});
+
 test("clicking a collapsed card expands it", () => {
   const { app } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
