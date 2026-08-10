@@ -375,7 +375,11 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     video.classList.remove("hidden");
     img.classList.add("hidden");
     spinner.classList.add("hidden");
-    if (!isReducedMotion()) video.play();
+    if (isReducedMotion()) {
+      video.pause();
+    } else {
+      video.play();
+    }
   });
 
   video.addEventListener("error", () => {

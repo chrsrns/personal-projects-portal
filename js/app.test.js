@@ -576,6 +576,21 @@ test("keyboard and reduced motion are supported", () => {
   assert.strictEqual(video._played, 0, "video play should not be called when reduced motion is preferred");
 });
 
+test("reduced motion pauses video on canplay", () => {
+  const { app, win } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card, video, img } = app.createProjectCard(project, {}, {});
+
+  win.reducedMotion = true;
+  card.click();
+  video._played = 0;
+  video._paused = 0;
+  video.dispatchEvent("canplay");
+
+  assert.strictEqual(video._played, 0, "video play should not be called when reduced motion is preferred");
+  assert.ok(video._paused > 0, "video should be paused on canplay under reduced motion");
+});
+
 test("expanded card scroll anchor adds top margin and scrolls into view", () => {
   const { app, grid, win } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
