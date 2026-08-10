@@ -576,21 +576,24 @@ test("keyboard and reduced motion are supported", () => {
   assert.strictEqual(video._played, 0, "video play should not be called when reduced motion is preferred");
 });
 
-test("expanded card scrolls into view", () => {
+test("expanded card scroll anchor adds top margin and scrolls into view", () => {
   const { app, grid, win } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
-  const { card } = app.createProjectCard(project, {}, {});
+  const { card, scrollAnchor } = app.createProjectCard(project, {}, {});
   grid.appendChild(card);
 
+  assert.ok(scrollAnchor, "card should have a scroll anchor");
+  assert.ok(scrollAnchor.classList.contains("scroll-mt-8"), "scroll anchor should add a top margin when scrolling");
+
   card.click();
-  assert.ok(card._scrolled, "card should scroll into view when expanded");
-  assert.strictEqual(card._scrolled.block, "start", "scroll should align to the top of the card");
+  assert.ok(scrollAnchor._scrolled, "scroll anchor should scroll into view when expanded");
+  assert.strictEqual(scrollAnchor._scrolled.block, "start", "scroll should align to the top of the anchor");
 
   win.reducedMotion = true;
-  card._scrolled = false;
+  scrollAnchor._scrolled = false;
   card.click();
   card.click();
-  assert.strictEqual(card._scrolled.behavior, "auto", "reduced motion should use auto scroll behavior");
+  assert.strictEqual(scrollAnchor._scrolled.behavior, "auto", "reduced motion should use auto scroll behavior");
 });
 
 test("expanded card content scrolls independently", () => {
@@ -653,6 +656,7 @@ test("generated css contains expanded card and image utilities", () => {
   assert.ok(css.includes(".aspect-square"), "css should contain aspect-square");
   assert.ok(css.includes(".object-center"), "css should contain object-center");
   assert.ok(css.includes(".object-contain"), "css should contain object-contain");
+  assert.ok(css.includes(".scroll-mt-8"), "css should contain scroll-mt-8");
 });
 
 test("index.html has flex viewport layout", () => {

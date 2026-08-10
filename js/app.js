@@ -315,7 +315,7 @@ const expandCard = (id) => {
   updateGridTemplateRows(data.card);
 
   const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  data.card.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
+  data.scrollAnchor.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
 
   expandedProjectId = targetId;
 };
@@ -452,9 +452,15 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   contentDiv.appendChild(techWrap);
   article.appendChild(mediaWrapper);
   article.appendChild(contentDiv);
+
+  const scrollAnchor = el("div", {
+    class: "h-0 w-full scroll-mt-8",
+    "aria-hidden": "true"
+  });
+  card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, spinner, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, spinner, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -472,7 +478,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, safeVideoUrl };
+  return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {

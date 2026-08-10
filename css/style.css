@@ -752,6 +752,10 @@ video {
   aspect-ratio: 1 / 1;
 }
 
+.h-0 {
+  height: 0px;
+}
+
 .h-1\/2 {
   height: 50%;
 }
@@ -820,6 +824,10 @@ video {
 
 .resize {
   resize: both;
+}
+
+.scroll-mt-8 {
+  scroll-margin-top: 2rem;
 }
 
 .grid-cols-1 {
