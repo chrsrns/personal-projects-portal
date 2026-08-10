@@ -195,13 +195,28 @@ class MockElement {
     if (typeof event === "string") event = { type: event, target: this };
     else if (!event.target) event.target = this;
 
+    let stopped = false;
+    if (!event.stopPropagation) {
+      event.stopPropagation = () => { stopped = true; };
+    }
+    const originalStop = event.stopPropagation;
+    event.stopPropagation = () => { stopped = true; originalStop.call(event); };
+
+    if (!event.preventDefault) event.preventDefault = () => {};
+
     const handlers = this._listeners.get(event.type);
     if (handlers) {
-      for (const fn of handlers) fn.call(this, event);
+      for (const fn of handlers) {
+        if (stopped) break;
+        fn.call(this, event);
+      }
     }
     const onProp = this["on" + event.type];
-    if (typeof onProp === "function") onProp.call(this, event);
-    for (const child of this._children) child.dispatchEvent(event);
+    if (!stopped && typeof onProp === "function") onProp.call(this, event);
+
+    if (!stopped && this._parent) {
+      this._parent.dispatchEvent(event);
+    }
   }
 
   querySelector(sel) {
@@ -426,12 +441,42 @@ test("click outside grid collapses expanded card", () => {
   const { app, doc, grid } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
   const { card } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
   card.click();
   assert.strictEqual(card.getAttribute("aria-expanded"), "true");
 
   const outside = new MockElement("div");
-  doc.dispatchEvent({ type: "click", target: outside });
+  doc.appendChild(outside);
+  outside.dispatchEvent({ type: "click", target: outside });
   assert.strictEqual(card.getAttribute("aria-expanded"), "false", "expanded card should collapse on outside click");
+});
+
+test("clicking expanded title link does not collapse card and preserves href", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
+  const { card, titleLink } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true");
+  assert.strictEqual(titleLink.getAttribute("href"), "https://example.com/project", "title link should have the project href");
+
+  titleLink.dispatchEvent({ type: "click", target: titleLink });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should stay expanded when title link is clicked");
+  assert.strictEqual(titleLink.getAttribute("href"), "https://example.com/project", "title link href should be preserved");
+});
+
+test("clicking expanded video does not collapse card", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const { card, video } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true");
+
+  video.dispatchEvent({ type: "click", target: video });
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should stay expanded when video is clicked");
 });
 
 test("expanded card spans full grid row and uses flex layout", () => {

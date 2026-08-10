@@ -267,7 +267,6 @@ const collapseCard = (id) => {
   if (data.safeProjectLink) {
     data.titleLink.replaceWith(data.titleContainer);
     data.titleChildren.forEach((child) => data.titleContainer.appendChild(child));
-    data.titleLink.href = null;
   }
 
   if (data.safeVideoUrl) {
@@ -365,6 +364,9 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     autoplay: true,
   });
   mediaWrapper.appendChild(video);
+  video.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
 
   const isReducedMotion = () =>
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -408,6 +410,9 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
 
   // The expanded title link is created detached; children are moved in on expand
   const titleLink = el("a", { class: "flex flex-wrap gap-2" });
+  titleLink.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
 
   // Description paragraphs
   const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
