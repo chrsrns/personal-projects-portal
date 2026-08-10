@@ -341,11 +341,11 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const article = el("article", { class: "group" });
 
   // Media wrapper contains image and optional video; no link while collapsed
-  const mediaWrapper = el("div", { class: "relative" });
+  const mediaWrapper = el("div", { class: "relative aspect-square flex items-center justify-center" });
   const img = el("img", {
     alt: "",
     src: safeImageUrl || "/img/placeholder.png",
-    class: "h-full w-full rounded-xl object-cover shadow-xl transition"
+    class: "h-full w-full rounded-xl object-contain object-center shadow-xl transition"
   });
   mediaWrapper.appendChild(img);
 

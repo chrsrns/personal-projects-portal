@@ -366,6 +366,17 @@ test("DOM test infrastructure loads app module with mock DOM", () => {
   assert.ok(app, "app module should export an object");
 });
 
+test("project image is contained, square, and centered", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", image_url: "https://example.com/image.png" };
+  const { img, mediaWrapper } = app.createProjectCard(project, {}, {});
+  assert.ok(img.classList.contains("object-contain"), "image should use object-contain");
+  assert.ok(img.classList.contains("object-center"), "image should be centered");
+  assert.ok(mediaWrapper.classList.contains("aspect-square"), "media wrapper should have a square aspect ratio");
+  assert.ok(mediaWrapper.classList.contains("items-center"), "media wrapper should center the image vertically");
+  assert.ok(mediaWrapper.classList.contains("justify-center"), "media wrapper should center the image horizontally");
+});
+
 test("project video URL is allow-listed before src", () => {
   const { app } = setup();
   const validProject = { id: 1, project_name: "Valid", video: "https://example.com/video.mp4" };
@@ -588,12 +599,15 @@ test("clicking a collapsed card expands it", () => {
   assert.strictEqual(h3.parentNode.getAttribute("href"), "https://example.com/project", "title link should point to the project link");
 });
 
-test("generated css contains expanded card utilities", () => {
+test("generated css contains expanded card and image utilities", () => {
   const css = fs.readFileSync(path.resolve(__dirname, "..", "css", "style.css"), "utf8");
   assert.ok(css.includes(".col-span-full"), "css should contain the custom col-span-full utility");
   assert.ok(css.includes(".min-h-dvh"), "css should contain min-h-dvh");
   assert.ok(css.includes(".focus-visible\\:ring-2"), "css should contain focus-visible ring utilities");
   assert.ok(css.includes(".motion-reduce\\:transition-none"), "css should contain motion-reduce transition utility");
+  assert.ok(css.includes(".aspect-square"), "css should contain aspect-square");
+  assert.ok(css.includes(".object-center"), "css should contain object-center");
+  assert.ok(css.includes(".object-contain"), "css should contain object-contain");
 });
 
 test("index.html has flex viewport layout", () => {
