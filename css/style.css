@@ -768,6 +768,10 @@ video {
   height: 1em;
 }
 
+.h-dvh {
+  height: 100dvh;
+}
+
 .h-full {
   height: 100%;
 }
