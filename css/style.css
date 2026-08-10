@@ -768,8 +768,8 @@ video {
   height: 1em;
 }
 
-.h-dvh {
-  height: 100dvh;
+.h-\[calc\(100dvh-4rem\)\] {
+  height: calc(100dvh - 4rem);
 }
 
 .h-full {

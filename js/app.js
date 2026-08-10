@@ -258,7 +258,7 @@ const collapseCard = (id) => {
   if (!data) return;
 
   data.card.setAttribute("aria-expanded", "false");
-  data.card.classList.remove("col-span-full", "h-dvh", "lg:flex-row", "overflow-hidden", "shadow-2xl");
+  data.card.classList.remove("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
   data.card.classList.add("shadow-xl");
   data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
@@ -292,7 +292,7 @@ const expandCard = (id) => {
 
   data.card.setAttribute("aria-expanded", "true");
   data.card.classList.remove("shadow-xl");
-  data.card.classList.add("col-span-full", "h-dvh", "lg:flex-row", "overflow-hidden", "shadow-2xl");
+  data.card.classList.add("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
   data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
   data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");

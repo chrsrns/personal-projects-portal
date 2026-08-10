@@ -487,7 +487,7 @@ test("expanded card spans full grid row and uses flex layout", () => {
 
   card.click();
   assert.ok(card.classList.contains("col-span-full"), "expanded card should span full grid column");
-  assert.ok(card.classList.contains("h-dvh"), "expanded card should fill the viewport, not the grid track");
+  assert.ok(card.classList.contains("h-[calc(100dvh-4rem)]"), "expanded card should fill viewport minus top and bottom margin");
   assert.ok(card.classList.contains("lg:flex-row") || card.querySelector("article").classList.contains("lg:flex-row"), "expanded card should use a row flex layout on large screens");
   assert.ok(mediaWrapper.classList.contains("h-1/2") || mediaWrapper.classList.contains("lg:h-full"), "media wrapper should have a defined height");
   assert.ok(contentDiv.classList.contains("h-1/2") || contentDiv.classList.contains("lg:h-full"), "content wrapper should have a defined height");
@@ -657,7 +657,7 @@ test("generated css contains expanded card and image utilities", () => {
   assert.ok(css.includes(".object-center"), "css should contain object-center");
   assert.ok(css.includes(".object-contain"), "css should contain object-contain");
   assert.ok(css.includes(".scroll-mt-8"), "css should contain scroll-mt-8");
-  assert.ok(css.includes(".h-dvh"), "css should contain h-dvh for expanded card height");
+  assert.ok(css.includes(".h-\\[calc\\(100dvh-4rem\\)\\]"), "css should contain h-[calc(100dvh-4rem)] for expanded card height");
 });
 
 test("index.html has flex viewport layout", () => {
