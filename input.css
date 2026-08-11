@@ -52,6 +52,13 @@
     @apply p-0;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .row,
+    .cell {
+      transition: none;
+    }
+  }
+
   @media (min-width: 1024px) {
     .row {
       grid-template-columns: 1fr 1fr 1fr;
