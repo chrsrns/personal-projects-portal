@@ -244,6 +244,9 @@ const collapseCard = (id) => {
   data.cell.classList.remove("expanded");
   data.row.classList.remove("expanded-1", "expanded-2", "expanded-3");
 
+  if (data.titleEl) data.titleEl.classList.remove("mb-6");
+  if (data.techWrap) data.techWrap.classList.remove("mt-6");
+
   if (data.video) {
     data.video.pause();
     data.video.src = "";
@@ -273,6 +276,9 @@ const expandCard = (id) => {
   data.cell.setAttribute("aria-expanded", "true");
   data.cell.classList.add("expanded");
   data.row.classList.add(`expanded-${col}`);
+
+  if (data.titleEl) data.titleEl.classList.add("mb-6");
+  if (data.techWrap) data.techWrap.classList.add("mt-6");
 
   if (data.safeVideoUrl && data.video) {
     data.video.src = data.safeVideoUrl;
@@ -375,12 +381,11 @@ const buildTextContent = (p, keyPointsByProjectId, techByProjectId, options = {}
     });
 
     const buttonWrap = el("div", { class: "flex gap-4 mt-auto self-start" }, [projectBtn, sourceBtn]);
-    container.appendChild(buttonWrap);
 
-    return { container, titleEl, projectBtn, sourceBtn, buttonWrap };
+    return { container, titleEl, techWrap, projectBtn, sourceBtn, buttonWrap };
   }
 
-  return { container, titleEl };
+  return { container, titleEl, techWrap };
 };
 
 const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
@@ -483,8 +488,9 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     titleClass: "text-2xl font-medium text-gray-900 shrink-0",
   });
   contentDiv.appendChild(expandedContent.container);
+  if (expandedContent.buttonWrap) contentDiv.appendChild(expandedContent.buttonWrap);
 
-  const { titleEl, buttonWrap, projectBtn, sourceBtn } = expandedContent;
+  const { titleEl, buttonWrap, projectBtn, sourceBtn, techWrap } = expandedContent;
 
   expanded.appendChild(mediaWrapper);
   expanded.appendChild(contentDiv);
@@ -503,6 +509,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     mediaWrapper,
     contentDiv,
     titleEl,
+    techWrap,
     buttonWrap,
     projectBtn,
     sourceBtn,
