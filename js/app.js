@@ -309,8 +309,11 @@ const expandCard = (id) => {
     data.titleContainer.replaceWith(data.titleLink);
   }
 
-  if (data.projectBtn) data.contentDiv.appendChild(data.projectBtn);
-  if (data.sourceBtn) data.contentDiv.appendChild(data.sourceBtn);
+  if (data.projectBtn && data.sourceBtn) {
+    const afterTech = data.techWrap ? data.techWrap.nextSibling : null;
+    data.contentDiv.insertBefore(data.projectBtn, afterTech);
+    data.contentDiv.insertBefore(data.sourceBtn, data.projectBtn.nextSibling);
+  }
 
   if (data.safeVideoUrl) {
     data.video.src = data.safeVideoUrl;
@@ -508,7 +511,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, techWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
