@@ -280,6 +280,9 @@ const collapseCard = (id) => {
     }
   }
 
+  if (data.projectBtn) data.projectBtn.remove();
+  if (data.sourceBtn) data.sourceBtn.remove();
+
   resetGridTemplateRows(data.card.parentNode);
   expandedProjectId = null;
 };
@@ -305,6 +308,9 @@ const expandCard = (id) => {
     data.titleChildren.forEach((child) => data.titleLink.appendChild(child));
     data.titleContainer.replaceWith(data.titleLink);
   }
+
+  if (data.projectBtn) data.contentDiv.appendChild(data.projectBtn);
+  if (data.sourceBtn) data.contentDiv.appendChild(data.sourceBtn);
 
   if (data.safeVideoUrl) {
     data.video.src = data.safeVideoUrl;
@@ -468,6 +474,26 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   }
 
   contentDiv.appendChild(techWrap);
+
+  // Expanded-only action buttons
+  const projectBtn = el("button", {
+    type: "button",
+    text: "Live Demo",
+    class: "mt-4 mr-2 rounded-md px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+  });
+  projectBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  const sourceBtn = el("button", {
+    type: "button",
+    text: "View Code",
+    class: "mt-4 rounded-md px-4 py-2 text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+  });
+  sourceBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
   article.appendChild(mediaWrapper);
   article.appendChild(contentDiv);
 
@@ -478,7 +504,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -496,7 +522,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
+  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, projectBtn, sourceBtn, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {

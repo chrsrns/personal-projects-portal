@@ -175,6 +175,11 @@ class MockElement {
     if (!this._parent) return;
     this._parent.replaceChild(newChild, this);
   }
+
+  remove() {
+    if (this._parent) this._parent.removeChild(this);
+  }
+
   insertBefore(child, before) {
     if (child._parent) child._parent.removeChild(child);
     const i = this._children.indexOf(before);
