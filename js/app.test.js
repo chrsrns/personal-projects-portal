@@ -720,6 +720,22 @@ test("overlay fades in on expand and out on canplay or error", () => {
   assert.ok(overlay2.classList.contains("opacity-0"), "overlay should fade out on error");
 });
 
+test("overlay respects reduced motion and is absent without video_url", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", video_url: "https://example.com/video.mp4" };
+  const { mediaWrapper } = app.createProjectCard(project, {}, {});
+  const overlay = mediaWrapper.querySelector(".z-10");
+
+  assert.ok(overlay.classList.contains("transition-opacity"), "overlay should have an opacity transition");
+  assert.ok(overlay.classList.contains("duration-300"), "overlay should have a 300ms transition");
+  assert.ok(overlay.classList.contains("motion-reduce:transition-none"), "overlay should disable transitions for reduced motion");
+  assert.ok(overlay.classList.contains("motion-reduce:duration-0"), "overlay should have zero duration for reduced motion");
+
+  const noVideoProject = { id: 2, project_name: "NoVideo" };
+  const { mediaWrapper: mediaWrapper2 } = app.createProjectCard(noVideoProject, {}, {});
+  assert.strictEqual(mediaWrapper2.querySelector(".z-10"), null, "overlay should not exist without video_url");
+});
+
 test("old text spinner is not rendered", () => {
   const { app, grid } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
