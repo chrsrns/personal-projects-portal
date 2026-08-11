@@ -308,6 +308,10 @@ const expandCard = (id) => {
     data.spinner.classList.remove("hidden");
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
+    if (data.overlay) {
+      data.overlay.classList.remove("opacity-0");
+      data.overlay.classList.add("opacity-100");
+    }
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!reduced) data.video.play();
   }
@@ -384,6 +388,10 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     video.classList.remove("hidden");
     img.classList.add("hidden");
     spinner.classList.add("hidden");
+    if (overlay) {
+      overlay.classList.remove("opacity-100");
+      overlay.classList.add("opacity-0");
+    }
     if (isReducedMotion()) {
       video.pause();
     } else {
@@ -395,6 +403,10 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     spinner.classList.add("hidden");
     video.classList.add("hidden");
     img.classList.remove("hidden");
+    if (overlay) {
+      overlay.classList.remove("opacity-100");
+      overlay.classList.add("opacity-0");
+    }
   });
 
   // Content container

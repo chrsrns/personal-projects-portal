@@ -695,3 +695,27 @@ test("overlay is rendered inside mediaWrapper when video_url exists", () => {
   const spinner = overlay.querySelector(".animate-spin");
   assert.ok(spinner, "overlay should contain a CSS-only spinner");
 });
+
+test("overlay fades in on expand and out on canplay or error", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
+  const { card, overlay, video } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  assert.ok(overlay.classList.contains("opacity-0"), "overlay should be hidden when collapsed");
+
+  card.click();
+  assert.ok(overlay.classList.contains("opacity-100"), "overlay should be visible after expand");
+
+  video.dispatchEvent("canplay");
+  assert.ok(overlay.classList.contains("opacity-0"), "overlay should fade out on canplay");
+
+  const errorProject = { id: 2, project_name: "E", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
+  const { card: card2, overlay: overlay2, video: video2 } = app.createProjectCard(errorProject, {}, {});
+  grid.appendChild(card2);
+  card2.click();
+  assert.ok(overlay2.classList.contains("opacity-100"), "overlay should be visible after expand");
+
+  video2.dispatchEvent("error");
+  assert.ok(overlay2.classList.contains("opacity-0"), "overlay should fade out on error");
+});
