@@ -683,3 +683,15 @@ test("index.html has flex viewport layout", () => {
   assert.ok(/<main[^>]*class="[^"]*flex-1[^"]*"/.test(html), "main wrapper should be flex-1");
   assert.ok(/class="[^"]*relative grid h-full[^"]*"/.test(html), "inner grid should be h-full");
 });
+
+test("overlay is rendered inside mediaWrapper when video_url exists", () => {
+  const { app } = setup();
+  const project = { id: 1, project_name: "P", video_url: "https://example.com/video.mp4" };
+  const { mediaWrapper } = app.createProjectCard(project, {}, {});
+  const overlay = mediaWrapper.querySelector(".z-10");
+  assert.ok(overlay, "overlay should be present when video_url exists");
+  assert.ok(overlay.classList.contains("bg-gray-900/60"), "overlay should be dark translucent");
+  assert.ok(overlay.classList.contains("pointer-events-none"), "overlay should not capture clicks");
+  const spinner = overlay.querySelector(".animate-spin");
+  assert.ok(spinner, "overlay should contain a CSS-only spinner");
+});

@@ -368,6 +368,15 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     event.stopPropagation();
   });
 
+  const overlay = safeVideoUrl
+    ? el("div", {
+        class: "absolute inset-0 z-10 bg-gray-900/60 flex items-center justify-center opacity-0 transition-opacity duration-300 pointer-events-none"
+      }, [
+        el("div", { class: "h-8 w-8 animate-spin rounded-full border-4 border-t-transparent border-white" })
+      ])
+    : null;
+  if (overlay) mediaWrapper.appendChild(overlay);
+
   const isReducedMotion = () =>
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -464,7 +473,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, spinner, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, spinner, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -482,7 +491,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, spinner, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
+  return { card, img, video, spinner, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
