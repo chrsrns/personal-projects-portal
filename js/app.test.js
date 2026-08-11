@@ -642,7 +642,7 @@ test("expanded content scales type and uses flex with pushed buttons", () => {
     description: "A short description.",
   };
   const techByProjectId = { 1: [{ technology_name: "JavaScript" }] };
-  const { card, contentDiv, techWrap, projectBtn, sourceBtn } = app.createProjectCard(project, {}, techByProjectId);
+  const { card, contentDiv, techWrap, buttonWrap, projectBtn, sourceBtn } = app.createProjectCard(project, {}, techByProjectId);
   grid.appendChild(card);
 
   card.click();
@@ -651,9 +651,12 @@ test("expanded content scales type and uses flex with pushed buttons", () => {
   assert.ok(contentDiv.classList.contains("min-h-0"), "content should allow shrinking");
   assert.ok(contentDiv.classList.contains("lg:p-8"), "content should have larger desktop padding");
 
-  assert.ok(projectBtn.classList.contains("mt-auto"), "Live Demo button should push to bottom");
-  assert.ok(projectBtn.classList.contains("self-start"), "buttons should not stretch");
-  assert.ok(sourceBtn.classList.contains("self-start"), "buttons should not stretch");
+  assert.ok(buttonWrap, "buttons should be wrapped");
+  assert.ok(buttonWrap.classList.contains("flex"), "button wrapper should be a flex container");
+  assert.ok(buttonWrap.classList.contains("mt-auto"), "button wrapper should push to bottom");
+  assert.ok(buttonWrap.classList.contains("self-start"), "button wrapper should not stretch");
+  assert.strictEqual(buttonWrap.children[0], projectBtn, "Live Demo should be first in wrapper");
+  assert.strictEqual(buttonWrap.children[1], sourceBtn, "View Code should be second in wrapper");
 
   const h3 = contentDiv.querySelector("h3");
   assert.ok(h3.classList.contains("lg:text-2xl"), "title should scale up on desktop");
@@ -670,10 +673,12 @@ test("expanded content scales type and uses flex with pushed buttons", () => {
   for (const p of techPs) {
     assert.ok(p.classList.contains("lg:text-base"), "tech tag text should scale up");
   }
+  assert.ok(techWrap.classList.contains("mt-6"), "tech tags should have top spacing");
 
   card.click();
   assert.ok(!contentDiv.classList.contains("flex"), "content should not be flex after collapse");
   assert.ok(!h3.classList.contains("lg:text-2xl"), "title should not have large class after collapse");
+  assert.ok(!techWrap.classList.contains("mt-6"), "tech tags should lose top spacing after collapse");
 });
 
 test("card has transition classes and re-layouts on resize", () => {
@@ -1011,7 +1016,7 @@ test("expanded title link remains when buttons are present", () => {
   assert.strictEqual(h3.parentNode.getAttribute("href"), "https://example.com/project", "title link should still point to project link");
 });
 
-test("buttons are the last children of the content div", () => {
+test("buttons are wrapped at the end of the content div", () => {
   const { app, grid } = setup();
   const project = {
     id: 1,
@@ -1023,8 +1028,10 @@ test("buttons are the last children of the content div", () => {
   grid.appendChild(card);
   card.click();
 
-  const buttons = contentDiv.querySelectorAll("button");
   const children = Array.from(contentDiv.children);
-  assert.strictEqual(children[children.length - 2], buttons[0], "Live Demo should be second-to-last child");
-  assert.strictEqual(children[children.length - 1], buttons[1], "View Code should be last child");
+  const buttonWrap = children[children.length - 1];
+  const buttons = buttonWrap.querySelectorAll("button");
+  assert.strictEqual(buttons.length, 2, "wrapper should contain two buttons");
+  assert.strictEqual(buttons[0].textContent, "Live Demo", "Live Demo should be first in wrapper");
+  assert.strictEqual(buttons[1].textContent, "View Code", "View Code should be second in wrapper");
 });

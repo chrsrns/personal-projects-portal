@@ -268,6 +268,7 @@ const collapseCard = (id) => {
   if (data.titleContainer) data.titleContainer.classList.remove("mt-3", "mb-6");
   data.bodyParagraphs.forEach((p) => p.classList.remove("lg:text-base", "lg:leading-relaxed"));
   data.techParagraphs.forEach((p) => p.classList.remove("lg:text-base"));
+  if (data.techWrap) data.techWrap.classList.remove("mt-6");
 
   if (data.safeProjectLink) {
     data.titleLink.replaceWith(data.titleContainer);
@@ -286,8 +287,7 @@ const collapseCard = (id) => {
     }
   }
 
-  if (data.projectBtn) data.projectBtn.remove();
-  if (data.sourceBtn) data.sourceBtn.remove();
+  if (data.buttonWrap) data.buttonWrap.remove();
 
   resetGridTemplateRows(data.card.parentNode);
   expandedProjectId = null;
@@ -313,6 +313,7 @@ const expandCard = (id) => {
   if (data.titleContainer) data.titleContainer.classList.add("mt-3", "mb-6");
   data.bodyParagraphs.forEach((p) => p.classList.add("lg:text-base", "lg:leading-relaxed"));
   data.techParagraphs.forEach((p) => p.classList.add("lg:text-base"));
+  if (data.techWrap) data.techWrap.classList.add("mt-6");
 
   if (data.safeProjectLink) {
     data.titleLink.href = data.safeProjectLink;
@@ -321,10 +322,8 @@ const expandCard = (id) => {
     data.titleContainer.replaceWith(data.titleLink);
   }
 
-  if (data.projectBtn && data.sourceBtn) {
-    const afterTech = data.techWrap ? data.techWrap.nextSibling : null;
-    data.contentDiv.insertBefore(data.projectBtn, afterTech);
-    data.contentDiv.insertBefore(data.sourceBtn, data.projectBtn.nextSibling);
+  if (data.buttonWrap) {
+    data.contentDiv.appendChild(data.buttonWrap);
   }
 
   if (data.safeVideoUrl) {
@@ -495,7 +494,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const projectBtn = el("button", {
     type: "button",
     text: safeProjectLink ? "Live Demo" : "No project link",
-    class: "mt-auto self-start text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
+    class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
     disabled: safeProjectLink ? undefined : ""
   });
   projectBtn.addEventListener("click", (event) => {
@@ -506,13 +505,15 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const sourceBtn = el("button", {
     type: "button",
     text: safeSourceLink ? "View Code" : "No source code link",
-    class: "self-start text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
+    class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
     disabled: safeSourceLink ? undefined : ""
   });
   sourceBtn.addEventListener("click", (event) => {
     event.stopPropagation();
     if (safeSourceLink) window.open(safeSourceLink, "_blank");
   });
+
+  const buttonWrap = el("div", { class: "flex gap-4 mt-auto self-start" }, [projectBtn, sourceBtn]);
 
   article.appendChild(mediaWrapper);
   article.appendChild(contentDiv);
@@ -524,7 +525,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, titleHeading, bodyParagraphs, techParagraphs, techWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, titleHeading, bodyParagraphs, techParagraphs, techWrap, buttonWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -542,7 +543,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, techWrap, projectBtn, sourceBtn, safeVideoUrl };
+  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, techWrap, buttonWrap, projectBtn, sourceBtn, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
