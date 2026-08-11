@@ -626,20 +626,20 @@ const generateSkeletonPlaceholders = () => {
   clearEl(container);
 
   for (let i = 0; i < 6; i++) {
-    const card = el("div", { class: "rounded-lg glow-on-hover" });
-    const article = el("article", { class: "group" });
+    const card = el("article", { class: "rounded-lg glow-on-hover shadow-xl" });
+    const collapsed = el("div", { class: "collapsed p-4 flex flex-col" });
 
-    const skeletonImage = el("div", {
-      class: "bg-neutral-200 w-full aspect-square rounded-xl object-cover shadow-xl animate-pulse",
-    });
+    const imgWrapper = el("div", { class: "w-full aspect-square rounded-xl overflow-hidden shadow-xl bg-neutral-200 animate-pulse" });
+    collapsed.appendChild(imgWrapper);
 
-    const contentDiv = el("div", { class: "p-4" });
+    const contentDiv = el("div", { class: "flex flex-col min-h-0" });
 
     const titleSkeleton = el("h3", { class: "text-lg" }, [
       el("div", { class: "h-[1.5em] flex items-center" }, [
         el("div", { class: "h-[1em] w-[16em] bg-neutral-200 rounded animate-pulse" })
       ])
     ]);
+    const titleWrapper = el("div", { class: "flex flex-wrap gap-2 shrink-0 mt-3" }, [titleSkeleton]);
 
     const descSkeleton1 = el("div", { class: "my-2 text-sm/relaxed text-gray-500" }, [
       el("div", { class: "h-[1.5em] flex items-center" }, [
@@ -665,7 +665,7 @@ const generateSkeletonPlaceholders = () => {
       ])
     ]);
 
-    const techSkeleton = el("div", { class: "flex flex-wrap gap-2" });
+    const techSkeleton = el("div", { class: "flex flex-wrap gap-2 shrink-0" });
     const tagWidths = ["4em", "6em", "4em", "7em", "4em", "5em", "4em"];
 
     for (const width of tagWidths) {
@@ -678,14 +678,13 @@ const generateSkeletonPlaceholders = () => {
       );
     }
 
-    contentDiv.appendChild(titleSkeleton);
+    contentDiv.appendChild(titleWrapper);
     contentDiv.appendChild(descSkeleton1);
     contentDiv.appendChild(descSkeleton2);
     contentDiv.appendChild(techSkeleton);
 
-    article.appendChild(skeletonImage);
-    article.appendChild(contentDiv);
-    card.appendChild(article);
+    collapsed.appendChild(contentDiv);
+    card.appendChild(collapsed);
     container.appendChild(card);
   }
 };
