@@ -262,7 +262,11 @@ const collapseCard = (id) => {
   data.card.classList.add("shadow-xl");
   data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
+  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "gap-6", "min-h-0", "lg:p-8");
+
+  if (data.titleHeading) data.titleHeading.classList.remove("lg:text-2xl");
+  data.bodyParagraphs.forEach((p) => p.classList.remove("lg:text-base", "lg:leading-relaxed"));
+  data.techParagraphs.forEach((p) => p.classList.remove("lg:text-base"));
 
   if (data.safeProjectLink) {
     data.titleLink.replaceWith(data.titleContainer);
@@ -301,7 +305,11 @@ const expandCard = (id) => {
   data.card.classList.add("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
   data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto");
+  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "gap-6", "min-h-0", "lg:p-8");
+
+  if (data.titleHeading) data.titleHeading.classList.add("lg:text-2xl");
+  data.bodyParagraphs.forEach((p) => p.classList.add("lg:text-base", "lg:leading-relaxed"));
+  data.techParagraphs.forEach((p) => p.classList.add("lg:text-base"));
 
   if (data.safeProjectLink) {
     data.titleLink.href = data.safeProjectLink;
@@ -415,65 +423,66 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const contentDiv = el("div", { class: "p-4" });
 
   // Title with optional "Preview not available" badge
-  const titleChildren = [
-    el("h3", {
-      class: "text-lg font-medium text-gray-900",
-      text: p.project_name || ""
-    })
-  ];
+  const titleHeading = el("h3", {
+    class: "text-lg font-medium text-gray-900 shrink-0",
+    text: p.project_name || ""
+  });
+  const titleChildren = [titleHeading];
 
   if (noPreview) {
     titleChildren.push(
       el("span", {
         class: "inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-yellow-700"
       }, [
-        el("p", { class: "whitespace-nowrap text-sm", text: "Preview not available" })
+        el("p", { class: "whitespace-nowrap text-sm shrink-0", text: "Preview not available" })
       ])
     );
   }
 
-  const titleContainer = el("div", { class: "flex flex-wrap gap-2" }, titleChildren);
+  const titleContainer = el("div", { class: "flex flex-wrap gap-2 shrink-0" }, titleChildren);
   contentDiv.appendChild(titleContainer);
 
   // The expanded title link is created detached; children are moved in on expand
-  const titleLink = el("a", { class: "flex flex-wrap gap-2" });
+  const titleLink = el("a", { class: "flex flex-wrap gap-2 shrink-0" });
   titleLink.addEventListener("click", (event) => {
     event.stopPropagation();
   });
 
   // Description paragraphs
   const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
+  const bodyParagraphs = [];
 
   // Add project description if available
   if (p.description) {
     const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
     for (const paragraph of paragraphs) {
-      contentDiv.appendChild(
-        el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: paragraph })
-      );
+      const paragraphEl = el("p", { class: "my-2 text-sm/relaxed text-gray-500 shrink-0", text: paragraph });
+      contentDiv.appendChild(paragraphEl);
+      bodyParagraphs.push(paragraphEl);
     }
   }
 
   // Add key points as separate paragraphs
   for (const point of points.slice().sort(sortByDisplayOrder)) {
     if (point.key_point) {
-      contentDiv.appendChild(
-        el("p", { class: "my-2 text-sm/relaxed text-gray-500", text: point.key_point })
-      );
+      const paragraphEl = el("p", { class: "my-2 text-sm/relaxed text-gray-500 shrink-0", text: point.key_point });
+      contentDiv.appendChild(paragraphEl);
+      bodyParagraphs.push(paragraphEl);
     }
   }
 
   // Technology tags
-  const techWrap = el("div", { class: "flex flex-wrap gap-2" });
+  const techWrap = el("div", { class: "flex flex-wrap gap-2 shrink-0" });
   const techs = (techByProjectId && techByProjectId[p.id]) || [];
+  const techParagraphs = [];
   for (const t of techs.slice().sort(sortByDisplayOrder)) {
+    const techParagraph = el("p", { class: "whitespace-nowrap text-sm shrink-0", text: t.technology_name || "" });
     techWrap.appendChild(
       el("span", {
         class: "inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700"
-      }, [
-        el("p", { class: "whitespace-nowrap text-sm", text: t.technology_name || "" })
-      ])
+      }, [techParagraph])
     );
+    techParagraphs.push(techParagraph);
   }
 
   contentDiv.appendChild(techWrap);
@@ -482,7 +491,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const projectBtn = el("button", {
     type: "button",
     text: safeProjectLink ? "Live Demo" : "No project link",
-    class: "mt-4 mr-2 rounded-md px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
+    class: "mt-auto self-start text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
     disabled: safeProjectLink ? undefined : ""
   });
   projectBtn.addEventListener("click", (event) => {
@@ -493,7 +502,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const sourceBtn = el("button", {
     type: "button",
     text: safeSourceLink ? "View Code" : "No source code link",
-    class: "mt-4 rounded-md px-4 py-2 text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
+    class: "self-start text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
     disabled: safeSourceLink ? undefined : ""
   });
   sourceBtn.addEventListener("click", (event) => {
@@ -511,7 +520,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, techWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, titleHeading, bodyParagraphs, techParagraphs, techWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -529,7 +538,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, projectBtn, sourceBtn, safeVideoUrl };
+  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, techWrap, projectBtn, sourceBtn, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {

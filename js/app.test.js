@@ -632,6 +632,51 @@ test("expanded card content scrolls independently", () => {
   assert.ok(contentDiv.classList.contains("h-1/2") || contentDiv.classList.contains("lg:h-full"), "content wrapper should have a constrained height");
 });
 
+test("expanded content scales type and uses flex with pushed buttons", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+    description: "A short description.",
+  };
+  const techByProjectId = { 1: [{ technology_name: "JavaScript" }] };
+  const { card, contentDiv, techWrap, projectBtn, sourceBtn } = app.createProjectCard(project, {}, techByProjectId);
+  grid.appendChild(card);
+
+  card.click();
+  assert.ok(contentDiv.classList.contains("flex"), "content should use flex");
+  assert.ok(contentDiv.classList.contains("flex-col"), "content should be a column flex container");
+  assert.ok(contentDiv.classList.contains("gap-6"), "content should have a larger gap");
+  assert.ok(contentDiv.classList.contains("min-h-0"), "content should allow shrinking");
+  assert.ok(contentDiv.classList.contains("lg:p-8"), "content should have larger desktop padding");
+
+  assert.ok(projectBtn.classList.contains("mt-auto"), "Live Demo button should push to bottom");
+  assert.ok(projectBtn.classList.contains("self-start"), "buttons should not stretch");
+  assert.ok(sourceBtn.classList.contains("self-start"), "buttons should not stretch");
+
+  const h3 = contentDiv.querySelector("h3");
+  assert.ok(h3.classList.contains("lg:text-2xl"), "title should scale up on desktop");
+
+  const bodyPs = Array.from(contentDiv.querySelectorAll("p")).filter((p) => p.classList.contains("text-sm/relaxed"));
+  assert.ok(bodyPs.length > 0, "body paragraphs should exist");
+  for (const p of bodyPs) {
+    assert.ok(p.classList.contains("lg:text-base"), "body text should scale up");
+    assert.ok(p.classList.contains("lg:leading-relaxed"), "body text should use relaxed line height");
+  }
+
+  const techPs = Array.from(techWrap.querySelectorAll("p"));
+  assert.ok(techPs.length > 0, "tech tags should exist");
+  for (const p of techPs) {
+    assert.ok(p.classList.contains("lg:text-base"), "tech tag text should scale up");
+  }
+
+  card.click();
+  assert.ok(!contentDiv.classList.contains("flex"), "content should not be flex after collapse");
+  assert.ok(!h3.classList.contains("lg:text-2xl"), "title should not have large class after collapse");
+});
+
 test("card has transition classes and re-layouts on resize", () => {
   const { app, grid, win } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project" };
