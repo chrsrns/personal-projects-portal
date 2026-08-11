@@ -8,8 +8,6 @@ const handleResumeChange = (event) => {
   console.log(`Resume ${event.resume_id} changed:`, event.action);
   const { apiBaseUrl, resumeId } = getConfig();
 
-  // Check if action is valid
-  // For the purposes of this function, we only care about the 'updated' property
   if (event.action === null || typeof event.action !== 'object' || !('updated' in event.action)) {
     return;
   }
@@ -22,7 +20,6 @@ const handleResumeChange = (event) => {
     default:
       console.log('Unknown update type:', event.action.updated);
   }
-
 };
 
 const handleWebSocketMessage = (event) => {
@@ -45,28 +42,23 @@ const handleWebSocketMessage = (event) => {
 };
 
 const createWebSocketConnection = (apiBaseUrl, resumeId, authToken = null) => {
-  // Determine protocol (wss for HTTPS, ws for HTTP)
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
   let wsHostPath;
   if (/^https?:\/\//.test(apiBaseUrl)) {
-    // Absolute URL: strip protocol and trailing slashes
     wsHostPath = apiBaseUrl
       .replace(/^https?:\/\//, '')
       .replace(/\/+$/, '');
   } else {
-    // Relative URL: prepend current host and strip trailing slashes
     const base = apiBaseUrl.replace(/\/+$/, '');
     wsHostPath = `${window.location.host}${base}`;
   }
 
   const wsUrl = `${protocol}//${wsHostPath}/ws`;
-
   const ws = new WebSocket(wsUrl);
 
   ws.addEventListener('open', () => {
     console.log('WebSocket connected');
-    // Send initial subscribe message
     const subscribeMessage = {
       type: 'subscribe',
       resume_id: resumeId,
@@ -232,64 +224,37 @@ const el = (tag, attrs = {}, children = []) => {
 // Section Rendering
 ////////////////////////////////////////////////////////
 
-const projectCardsById = new Map();
+const projectCellsById = new Map();
 let expandedProjectId = null;
 
-const resetGridTemplateRows = (grid) => {
-  if (!grid) return;
-  grid.style.gridTemplateRows = "";
-};
-
-const updateGridTemplateRows = (card) => {
-  const grid = card && card.parentNode;
-  if (!grid) return;
-
-  const cards = Array.from(grid.children).filter((c) => !c.classList.contains("overlay-placeholder"));
-  const expandedIndex = cards.indexOf(card);
-  if (expandedIndex === -1) return;
-
-  const rows = cards.map((_, i) => (i === expandedIndex ? "1fr" : "auto"));
-  grid.style.gridTemplateRows = rows.join(" ");
+const createRow = (cells) => {
+  const row = el("div", { class: "row" });
+  for (const cell of cells) {
+    row.appendChild(cell);
+  }
+  return row;
 };
 
 const collapseCard = (id) => {
   if (id == null) return;
-  const data = projectCardsById.get(String(id));
+  const data = projectCellsById.get(String(id));
   if (!data) return;
 
-  data.card.setAttribute("aria-expanded", "false");
-  data.card.classList.remove("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
-  data.card.classList.add("shadow-xl");
-  data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
-  data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "min-h-0", "lg:p-8");
+  data.cell.setAttribute("aria-expanded", "false");
+  data.cell.classList.remove("expanded");
+  data.row.classList.remove("expanded-1", "expanded-2", "expanded-3");
 
-  if (data.titleHeading) data.titleHeading.classList.remove("lg:text-2xl");
-  if (data.titleContainer) data.titleContainer.classList.remove("mt-3", "mb-6");
-  data.bodyParagraphs.forEach((p) => p.classList.remove("lg:text-base", "lg:leading-relaxed"));
-  data.techParagraphs.forEach((p) => p.classList.remove("lg:text-base"));
-  if (data.techWrap) data.techWrap.classList.remove("mt-6");
-
-  if (data.safeProjectLink) {
-    data.titleLink.replaceWith(data.titleContainer);
-    data.titleLink.classList.remove("mt-3", "mb-6");
-    data.titleChildren.forEach((child) => data.titleContainer.appendChild(child));
-  }
-
-  if (data.safeVideoUrl) {
+  if (data.video) {
     data.video.pause();
     data.video.src = "";
     data.video.classList.add("hidden");
-    data.img.classList.remove("hidden");
-    if (data.overlay) {
-      data.overlay.classList.remove("opacity-100");
-      data.overlay.classList.add("opacity-0");
-    }
+  }
+  if (data.img) data.img.classList.remove("hidden");
+  if (data.overlay) {
+    data.overlay.classList.remove("opacity-100");
+    data.overlay.classList.add("opacity-0");
   }
 
-  if (data.buttonWrap) data.buttonWrap.remove();
-
-  resetGridTemplateRows(data.card.parentNode);
   expandedProjectId = null;
 };
 
@@ -299,37 +264,20 @@ const expandCard = (id) => {
 
   collapseCard(expandedProjectId);
 
-  const data = projectCardsById.get(targetId);
+  const data = projectCellsById.get(targetId);
   if (!data) return;
 
-  data.card.setAttribute("aria-expanded", "true");
-  data.card.classList.remove("shadow-xl");
-  data.card.classList.add("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
-  data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
-  data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "min-h-0", "lg:p-8");
+  const index = Array.from(data.row.children).indexOf(data.cell);
+  const col = index + 1;
 
-  if (data.titleHeading) data.titleHeading.classList.add("lg:text-2xl");
-  if (data.titleContainer) data.titleContainer.classList.add("mt-3", "mb-6");
-  data.bodyParagraphs.forEach((p) => p.classList.add("lg:text-base", "lg:leading-relaxed"));
-  data.techParagraphs.forEach((p) => p.classList.add("lg:text-base"));
-  if (data.techWrap) data.techWrap.classList.add("mt-6");
+  data.cell.setAttribute("aria-expanded", "true");
+  data.cell.classList.add("expanded");
+  data.row.classList.add(`expanded-${col}`);
 
-  if (data.safeProjectLink) {
-    data.titleLink.href = data.safeProjectLink;
-    data.titleLink.classList.add("mt-3", "mb-6");
-    data.titleChildren.forEach((child) => data.titleLink.appendChild(child));
-    data.titleContainer.replaceWith(data.titleLink);
-  }
-
-  if (data.buttonWrap) {
-    data.contentDiv.appendChild(data.buttonWrap);
-  }
-
-  if (data.safeVideoUrl) {
+  if (data.safeVideoUrl && data.video) {
     data.video.src = data.safeVideoUrl;
     data.video.classList.add("hidden");
-    data.img.classList.remove("hidden");
+    if (data.img) data.img.classList.remove("hidden");
     if (data.overlay) {
       data.overlay.classList.remove("opacity-0");
       data.overlay.classList.add("opacity-100");
@@ -338,12 +286,101 @@ const expandCard = (id) => {
     if (!reduced) data.video.play();
   }
 
-  updateGridTemplateRows(data.card);
-
   const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  data.scrollAnchor.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
+  data.cell.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
 
   expandedProjectId = targetId;
+};
+
+const buildTextContent = (p, keyPointsByProjectId, techByProjectId, options = {}) => {
+  const { titleAsLink = false, includeButtons = false, titleClass = "text-lg font-medium text-gray-900 mt-3" } = options;
+
+  const safeProjectLink = isAllowedUrl(p.project_link);
+  const safeSourceLink = isAllowedUrl(p.source_code_link);
+  const noPreview = !safeProjectLink;
+
+  const container = el("div", { class: "flex flex-col min-h-0" });
+
+  const titleHeading = el("h3", { class: titleClass, text: p.project_name || "" });
+  const titleChildren = [titleHeading];
+
+  if (noPreview) {
+    titleChildren.push(
+      el("span", {
+        class: "inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-yellow-700",
+      }, [
+        el("p", { class: "whitespace-nowrap text-sm shrink-0", text: "Preview not available" })
+      ])
+    );
+  }
+
+  const titleEl = safeProjectLink && titleAsLink
+    ? el("a", { class: "flex flex-wrap gap-2 shrink-0", href: safeProjectLink })
+    : el("div", { class: "flex flex-wrap gap-2 shrink-0" });
+  titleEl.addEventListener("click", (event) => {
+    if (titleAsLink) event.stopPropagation();
+  });
+  for (const child of titleChildren) {
+    titleEl.appendChild(child);
+  }
+  container.appendChild(titleEl);
+
+  if (p.description) {
+    const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
+    for (const paragraph of paragraphs) {
+      container.appendChild(el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: paragraph }));
+    }
+  }
+
+  const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
+  for (const point of points.slice().sort(sortByDisplayOrder)) {
+    if (point.key_point) {
+      container.appendChild(el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: point.key_point }));
+    }
+  }
+
+  const techWrap = el("div", { class: "flex flex-wrap gap-2 shrink-0" });
+  const techs = (techByProjectId && techByProjectId[p.id]) || [];
+  for (const t of techs.slice().sort(sortByDisplayOrder)) {
+    const techP = el("p", { class: "whitespace-nowrap text-sm shrink-0", text: t.technology_name || "" });
+    techWrap.appendChild(
+      el("span", {
+        class: "inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700",
+      }, [techP])
+    );
+  }
+  container.appendChild(techWrap);
+
+  if (includeButtons) {
+    const projectBtn = el("button", {
+      type: "button",
+      text: safeProjectLink ? "Live Demo" : "No project link",
+      class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed self-start",
+      disabled: safeProjectLink ? undefined : "",
+    });
+    projectBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (safeProjectLink) window.open(safeProjectLink, "_blank");
+    });
+
+    const sourceBtn = el("button", {
+      type: "button",
+      text: safeSourceLink ? "View Code" : "No source code link",
+      class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed self-start",
+      disabled: safeSourceLink ? undefined : "",
+    });
+    sourceBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (safeSourceLink) window.open(safeSourceLink, "_blank");
+    });
+
+    const buttonWrap = el("div", { class: "flex gap-4 mt-auto self-start" }, [projectBtn, sourceBtn]);
+    container.appendChild(buttonWrap);
+
+    return { container, titleEl, projectBtn, sourceBtn, buttonWrap };
+  }
+
+  return { container, titleEl };
 };
 
 const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
@@ -352,25 +389,42 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const safeImageUrl = isAllowedUrl(p.image_url);
   const safeVideoUrl = isAllowedUrl(p.video_url);
 
-  const noPreview = !safeProjectLink;
-
-  // Create project card structure
-  const card = el("div", {
-    class: "rounded-lg glow-on-hover shadow-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
+  const cell = el("article", {
+    class: "cell rounded-lg glow-on-hover shadow-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
     tabindex: "0",
     role: "button",
     "aria-expanded": "false",
-    "data-project-id": String(p.id)
+    "data-project-id": String(p.id),
   });
 
-  const article = el("article", { class: "group" });
+  // Collapsed view
+  const collapsed = el("div", { class: "collapsed p-4 flex flex-col" });
 
-  // Media wrapper contains image and optional video; no link while collapsed
-  const mediaWrapper = el("div", { class: "relative aspect-square flex items-center justify-center" });
+  const collapsedImgWrapper = el("div", { class: "w-full aspect-square rounded-xl overflow-hidden shadow-xl" });
+  const collapsedImg = el("img", {
+    alt: "",
+    src: safeImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23e5e7eb'/%3E%3C/svg%3E",
+    class: "h-full w-full object-contain object-center",
+  });
+  collapsedImgWrapper.appendChild(collapsedImg);
+  collapsed.appendChild(collapsedImgWrapper);
+
+  const collapsedContent = buildTextContent(p, keyPointsByProjectId, techByProjectId, {
+    titleAsLink: false,
+    includeButtons: false,
+    titleClass: "text-lg font-medium text-gray-900 mt-3",
+  });
+  collapsed.appendChild(collapsedContent.container);
+
+  // Expanded view
+  const expanded = el("div", { class: "expanded h-full flex flex-col lg:flex-row" });
+
+  const mediaWrapper = el("div", { class: "relative aspect-square flex items-center justify-center h-1/2 lg:h-full lg:w-1/2" });
+
   const img = el("img", {
     alt: "",
-    src: safeImageUrl || "/img/placeholder.png",
-    class: "h-full w-full rounded-xl object-contain object-center shadow-xl transition"
+    src: safeImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23e5e7eb'/%3E%3C/svg%3E",
+    class: "h-full w-full rounded-xl object-contain object-center shadow-xl",
   });
   mediaWrapper.appendChild(img);
 
@@ -389,7 +443,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
 
   const overlay = safeVideoUrl
     ? el("div", {
-        class: "absolute inset-0 z-10 bg-gray-900/60 flex items-center justify-center opacity-0 transition-opacity duration-300 motion-reduce:transition-none motion-reduce:duration-0 pointer-events-none"
+        class: "absolute inset-0 z-10 bg-gray-900/60 flex items-center justify-center opacity-0 transition-opacity duration-300 motion-reduce:transition-none motion-reduce:duration-0 pointer-events-none",
       }, [
         el("div", { class: "h-8 w-8 animate-spin rounded-full border-4 border-t-transparent border-white" })
       ])
@@ -422,140 +476,71 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  // Content container
-  const contentDiv = el("div", { class: "p-4" });
-
-  // Title with optional "Preview not available" badge
-  const titleHeading = el("h3", {
-    class: "text-lg font-medium text-gray-900 shrink-0",
-    text: p.project_name || ""
+  const contentDiv = el("div", { class: "p-4 h-1/2 lg:h-full lg:w-1/2 overflow-y-auto flex flex-col min-h-0 lg:p-8" });
+  const expandedContent = buildTextContent(p, keyPointsByProjectId, techByProjectId, {
+    titleAsLink: true,
+    includeButtons: true,
+    titleClass: "text-2xl font-medium text-gray-900 shrink-0",
   });
-  const titleChildren = [titleHeading];
+  contentDiv.appendChild(expandedContent.container);
 
-  if (noPreview) {
-    titleChildren.push(
-      el("span", {
-        class: "inline-flex items-center justify-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-yellow-700"
-      }, [
-        el("p", { class: "whitespace-nowrap text-sm shrink-0", text: "Preview not available" })
-      ])
-    );
-  }
+  const { titleEl, buttonWrap, projectBtn, sourceBtn } = expandedContent;
 
-  const titleContainer = el("div", { class: "flex flex-wrap gap-2 shrink-0" }, titleChildren);
-  contentDiv.appendChild(titleContainer);
+  expanded.appendChild(mediaWrapper);
+  expanded.appendChild(contentDiv);
 
-  // The expanded title link is created detached; children are moved in on expand
-  const titleLink = el("a", { class: "flex flex-wrap gap-2 shrink-0" });
-  titleLink.addEventListener("click", (event) => {
-    event.stopPropagation();
-  });
+  cell.appendChild(collapsed);
+  cell.appendChild(expanded);
 
-  // Description paragraphs
-  const points = (keyPointsByProjectId && keyPointsByProjectId[p.id]) || [];
-  const bodyParagraphs = [];
+  const cellData = {
+    cell,
+    row: null,
+    collapsed,
+    expanded,
+    img,
+    video,
+    overlay,
+    mediaWrapper,
+    contentDiv,
+    titleEl,
+    buttonWrap,
+    projectBtn,
+    sourceBtn,
+    safeProjectLink,
+    safeSourceLink,
+    safeVideoUrl,
+  };
+  projectCellsById.set(String(p.id), cellData);
 
-  // Add project description if available
-  if (p.description) {
-    const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
-    for (const paragraph of paragraphs) {
-      const paragraphEl = el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: paragraph });
-      contentDiv.appendChild(paragraphEl);
-      bodyParagraphs.push(paragraphEl);
-    }
-  }
-
-  // Add key points as separate paragraphs
-  for (const point of points.slice().sort(sortByDisplayOrder)) {
-    if (point.key_point) {
-      const paragraphEl = el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: point.key_point });
-      contentDiv.appendChild(paragraphEl);
-      bodyParagraphs.push(paragraphEl);
-    }
-  }
-
-  // Technology tags
-  const techWrap = el("div", { class: "flex flex-wrap gap-2 shrink-0" });
-  const techs = (techByProjectId && techByProjectId[p.id]) || [];
-  const techParagraphs = [];
-  for (const t of techs.slice().sort(sortByDisplayOrder)) {
-    const techParagraph = el("p", { class: "whitespace-nowrap text-sm shrink-0", text: t.technology_name || "" });
-    techWrap.appendChild(
-      el("span", {
-        class: "inline-flex items-center justify-center rounded-full bg-purple-100 px-2.5 py-0.5 text-purple-700"
-      }, [techParagraph])
-    );
-    techParagraphs.push(techParagraph);
-  }
-
-  contentDiv.appendChild(techWrap);
-
-  // Expanded-only action buttons
-  const projectBtn = el("button", {
-    type: "button",
-    text: safeProjectLink ? "Live Demo" : "No project link",
-    class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
-    disabled: safeProjectLink ? undefined : ""
-  });
-  projectBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    if (safeProjectLink) window.open(safeProjectLink, "_blank");
+  cell.addEventListener("click", () => {
+    const cellId = String(p.id);
+    if (expandedProjectId === cellId) collapseCard(cellId);
+    else expandCard(cellId);
   });
 
-  const sourceBtn = el("button", {
-    type: "button",
-    text: safeSourceLink ? "View Code" : "No source code link",
-    class: "text-sm lg:text-base rounded-md px-4 py-2 font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
-    disabled: safeSourceLink ? undefined : ""
-  });
-  sourceBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    if (safeSourceLink) window.open(safeSourceLink, "_blank");
-  });
-
-  const buttonWrap = el("div", { class: "flex gap-4 mt-auto self-start" }, [projectBtn, sourceBtn]);
-
-  article.appendChild(mediaWrapper);
-  article.appendChild(contentDiv);
-
-  const scrollAnchor = el("div", {
-    class: "h-0 w-full scroll-mt-8",
-    "aria-hidden": "true"
-  });
-  card.appendChild(scrollAnchor);
-  card.appendChild(article);
-
-  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, titleHeading, bodyParagraphs, techParagraphs, techWrap, buttonWrap, projectBtn, sourceBtn, safeProjectLink, safeSourceLink, safeVideoUrl };
-  projectCardsById.set(String(p.id), cardData);
-
-  card.addEventListener("click", () => {
-    const id = String(p.id);
-    if (expandedProjectId === id) collapseCard(id);
-    else expandCard(id);
-  });
-
-  card.addEventListener("keydown", (event) => {
+  cell.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault && event.preventDefault();
-      const id = String(p.id);
-      if (expandedProjectId === id) collapseCard(id);
-      else expandCard(id);
+      const cellId = String(p.id);
+      if (expandedProjectId === cellId) collapseCard(cellId);
+      else expandCard(cellId);
     }
   });
 
-  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, techWrap, buttonWrap, projectBtn, sourceBtn, safeVideoUrl };
+  return { cell, img, video, overlay, mediaWrapper, contentDiv, titleEl, buttonWrap, projectBtn, sourceBtn, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
-  const container = document.querySelector('.grid');
+  const container = document.querySelector('.rows');
   if (!container) return;
 
-  projectCardsById.clear();
+  projectCellsById.clear();
   expandedProjectId = null;
 
-  // Preload all images, then render cards
-  const preloadImages = async (projects) => {
-    const imageData = projects.map(p => createProjectCard(p, keyPointsByProjectId, techByProjectId));
+  const sortedProjects = (projects || []).slice().sort(sortByDisplayOrder);
+
+  const preloadImages = async () => {
+    const imageData = sortedProjects.map(p => createProjectCard(p, keyPointsByProjectId, techByProjectId));
 
     const preloadPromises = imageData.map(({ img }) => {
       return new Promise((resolve) => {
@@ -563,25 +548,27 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
           resolve();
         } else {
           img.onload = resolve;
-          img.onerror = resolve; // Continue even if image fails to load
-          // Start loading the image
-          img.src = img.src; // This triggers the load
+          img.onerror = resolve;
+          img.src = img.src;
         }
       });
     });
 
-    // Wait for all images to load (or fail)
     await Promise.all(preloadPromises);
     clearEl(container);
 
-    // Now append all cards to the container
-    imageData.forEach(({ card }) => {
-      container.appendChild(card);
-    });
+    for (let i = 0; i < imageData.length; i += 3) {
+      const group = imageData.slice(i, i + 3);
+      const row = createRow(group.map(d => d.cell));
+      for (const d of group) {
+        d.row = row;
+        projectCellsById.get(String(d.cell.getAttribute("data-project-id"))).row = row;
+      }
+      container.appendChild(row);
+    }
   };
 
-  // Start the preloading process
-  preloadImages((projects || []).slice().sort(sortByDisplayOrder));
+  preloadImages();
 };
 
 ////////////////////////////////////////////////////////
@@ -589,13 +576,12 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
 ////////////////////////////////////////////////////////
 
 const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
-  const container = document.querySelector('.grid');
+  const container = document.querySelector('.rows');
   reAddSectionPlaceholder(container);
 
   try {
     const projects = await fetchBody(apiBaseUrl, `/resume/${resumeId}/portfolio_projects`);
 
-    // Fetch key points for each project
     const projectKeyPointsPairs = await Promise.all(
       (projects || []).map(async (p) => {
         try {
@@ -607,7 +593,6 @@ const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
       })
     );
 
-    // Fetch technologies for each project
     const projectTechPairs = await Promise.all(
       (projects || []).map(async (p) => {
         try {
@@ -644,22 +629,18 @@ const generateSkeletonPlaceholders = () => {
     const card = el("div", { class: "rounded-lg glow-on-hover" });
     const article = el("article", { class: "group" });
 
-    // Skeleton image
     const skeletonImage = el("div", {
-      class: "bg-neutral-200 w-full aspect-square rounded-xl object-cover shadow-xl animate-pulse"
+      class: "bg-neutral-200 w-full aspect-square rounded-xl object-cover shadow-xl animate-pulse",
     });
 
-    // Content container
     const contentDiv = el("div", { class: "p-4" });
 
-    // Skeleton title
     const titleSkeleton = el("h3", { class: "text-lg" }, [
       el("div", { class: "h-[1.5em] flex items-center" }, [
         el("div", { class: "h-[1em] w-[16em] bg-neutral-200 rounded animate-pulse" })
       ])
     ]);
 
-    // Skeleton description paragraphs
     const descSkeleton1 = el("div", { class: "my-2 text-sm/relaxed text-gray-500" }, [
       el("div", { class: "h-[1.5em] flex items-center" }, [
         el("div", { class: "h-[1em] w-full bg-neutral-200 rounded animate-pulse" })
@@ -684,7 +665,6 @@ const generateSkeletonPlaceholders = () => {
       ])
     ]);
 
-    // Skeleton tech tags
     const techSkeleton = el("div", { class: "flex flex-wrap gap-2" });
     const tagWidths = ["4em", "6em", "4em", "7em", "4em", "5em", "4em"];
 
@@ -698,7 +678,6 @@ const generateSkeletonPlaceholders = () => {
       );
     }
 
-    // Assemble the skeleton card
     contentDiv.appendChild(titleSkeleton);
     contentDiv.appendChild(descSkeleton1);
     contentDiv.appendChild(descSkeleton2);
@@ -723,7 +702,6 @@ const onReady = async () => {
     console.error(err);
   }
 
-  // Initialize WebSocket for real-time updates
   websocket = createWebSocketWithReconnect(apiBaseUrl, resumeId);
 };
 
@@ -734,14 +712,14 @@ if (document.readyState === "loading") {
 }
 
 document.addEventListener("click", (event) => {
-  const grid = document.querySelector(".grid");
-  if (grid && !grid.contains(event.target)) {
+  const rows = document.querySelector(".rows");
+  if (rows && !rows.contains(event.target)) {
     collapseCard(expandedProjectId);
   }
 });
 
 document.addEventListener("visibilitychange", () => {
-  const data = projectCardsById.get(expandedProjectId);
+  const data = projectCellsById.get(expandedProjectId);
   if (!data || !data.safeVideoUrl) return;
 
   if (document.hidden) {
@@ -749,11 +727,6 @@ document.addEventListener("visibilitychange", () => {
   } else {
     data.video.play();
   }
-});
-
-window.addEventListener("resize", () => {
-  const data = projectCardsById.get(expandedProjectId);
-  if (data) updateGridTemplateRows(data.card);
 });
 
 module.exports = { renderProjects, createProjectCard };
