@@ -275,6 +275,10 @@ const collapseCard = (id) => {
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
     data.spinner.classList.add("hidden");
+    if (data.overlay) {
+      data.overlay.classList.remove("opacity-100");
+      data.overlay.classList.add("opacity-0");
+    }
   }
 
   resetGridTemplateRows(data.card.parentNode);

@@ -719,3 +719,33 @@ test("overlay fades in on expand and out on canplay or error", () => {
   video2.dispatchEvent("error");
   assert.ok(overlay2.classList.contains("opacity-0"), "overlay should fade out on error");
 });
+
+test("overlay hides on collapse and ignores pause and visibilitychange", () => {
+  const { app, grid, doc } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
+  const { card, overlay, video } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  card.click();
+  assert.ok(overlay.classList.contains("opacity-100"), "overlay should be visible after expand");
+
+  card.click();
+  assert.ok(overlay.classList.contains("opacity-0"), "overlay should be hidden after collapse");
+
+  card.click();
+  assert.ok(overlay.classList.contains("opacity-100"), "overlay should be visible after re-expand");
+
+  video.dispatchEvent("canplay");
+  assert.ok(overlay.classList.contains("opacity-0"), "overlay should be hidden after canplay");
+
+  video.dispatchEvent("pause");
+  assert.ok(overlay.classList.contains("opacity-0"), "pause should not show overlay");
+
+  doc.hidden = true;
+  doc.dispatchDocEvent("visibilitychange");
+  assert.ok(overlay.classList.contains("opacity-0"), "visibilitychange hidden should not show overlay");
+
+  doc.hidden = false;
+  doc.dispatchDocEvent("visibilitychange");
+  assert.ok(overlay.classList.contains("opacity-0"), "visibilitychange visible should not show overlay");
+});
