@@ -673,6 +673,10 @@ video {
   overflow: hidden;
 }
 
+.cell.expanded .collapsed {
+  padding: 0px;
+}
+
 @media (min-width: 1024px) {
   .row {
     grid-template-columns: 1fr 1fr 1fr;

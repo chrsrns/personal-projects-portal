@@ -48,6 +48,10 @@
     overflow: hidden;
   }
 
+  .cell.expanded .collapsed {
+    @apply p-0;
+  }
+
   @media (min-width: 1024px) {
     .row {
       grid-template-columns: 1fr 1fr 1fr;
