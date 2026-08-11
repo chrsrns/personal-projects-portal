@@ -648,7 +648,6 @@ test("expanded content scales type and uses flex with pushed buttons", () => {
   card.click();
   assert.ok(contentDiv.classList.contains("flex"), "content should use flex");
   assert.ok(contentDiv.classList.contains("flex-col"), "content should be a column flex container");
-  assert.ok(contentDiv.classList.contains("gap-6"), "content should have a larger gap");
   assert.ok(contentDiv.classList.contains("min-h-0"), "content should allow shrinking");
   assert.ok(contentDiv.classList.contains("lg:p-8"), "content should have larger desktop padding");
 

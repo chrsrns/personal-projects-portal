@@ -262,14 +262,16 @@ const collapseCard = (id) => {
   data.card.classList.add("shadow-xl");
   data.article.classList.remove("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "gap-6", "min-h-0", "lg:p-8");
+  data.contentDiv.classList.remove("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "min-h-0", "lg:p-8");
 
   if (data.titleHeading) data.titleHeading.classList.remove("lg:text-2xl");
+  if (data.titleContainer) data.titleContainer.classList.remove("mt-3", "mb-6");
   data.bodyParagraphs.forEach((p) => p.classList.remove("lg:text-base", "lg:leading-relaxed"));
   data.techParagraphs.forEach((p) => p.classList.remove("lg:text-base"));
 
   if (data.safeProjectLink) {
     data.titleLink.replaceWith(data.titleContainer);
+    data.titleLink.classList.remove("mt-3", "mb-6");
     data.titleChildren.forEach((child) => data.titleContainer.appendChild(child));
   }
 
@@ -305,14 +307,16 @@ const expandCard = (id) => {
   data.card.classList.add("col-span-full", "h-[calc(100dvh-4rem)]", "lg:flex-row", "overflow-hidden", "shadow-2xl");
   data.article.classList.add("h-full", "w-full", "flex", "flex-col", "lg:flex-row");
   data.mediaWrapper.classList.add("h-1/2", "lg:h-full", "lg:w-1/2");
-  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "gap-6", "min-h-0", "lg:p-8");
+  data.contentDiv.classList.add("h-1/2", "lg:h-full", "lg:w-1/2", "overflow-y-auto", "flex", "flex-col", "min-h-0", "lg:p-8");
 
   if (data.titleHeading) data.titleHeading.classList.add("lg:text-2xl");
+  if (data.titleContainer) data.titleContainer.classList.add("mt-3", "mb-6");
   data.bodyParagraphs.forEach((p) => p.classList.add("lg:text-base", "lg:leading-relaxed"));
   data.techParagraphs.forEach((p) => p.classList.add("lg:text-base"));
 
   if (data.safeProjectLink) {
     data.titleLink.href = data.safeProjectLink;
+    data.titleLink.classList.add("mt-3", "mb-6");
     data.titleChildren.forEach((child) => data.titleLink.appendChild(child));
     data.titleContainer.replaceWith(data.titleLink);
   }
@@ -456,7 +460,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   if (p.description) {
     const paragraphs = p.description.split('\n').filter(line => line.trim() !== '');
     for (const paragraph of paragraphs) {
-      const paragraphEl = el("p", { class: "my-2 text-sm/relaxed text-gray-500 shrink-0", text: paragraph });
+      const paragraphEl = el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: paragraph });
       contentDiv.appendChild(paragraphEl);
       bodyParagraphs.push(paragraphEl);
     }
@@ -465,7 +469,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   // Add key points as separate paragraphs
   for (const point of points.slice().sort(sortByDisplayOrder)) {
     if (point.key_point) {
-      const paragraphEl = el("p", { class: "my-2 text-sm/relaxed text-gray-500 shrink-0", text: point.key_point });
+      const paragraphEl = el("p", { class: "text-sm/relaxed text-gray-500 shrink-0", text: point.key_point });
       contentDiv.appendChild(paragraphEl);
       bodyParagraphs.push(paragraphEl);
     }
