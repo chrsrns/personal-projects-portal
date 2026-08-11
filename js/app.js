@@ -293,7 +293,7 @@ const expandCard = (id) => {
 };
 
 const buildTextContent = (p, keyPointsByProjectId, techByProjectId, options = {}) => {
-  const { titleAsLink = false, includeButtons = false, titleClass = "text-lg font-medium text-gray-900 mt-3" } = options;
+  const { titleAsLink = false, includeButtons = false, titleClass = "text-lg font-medium text-gray-900" } = options;
 
   const safeProjectLink = isAllowedUrl(p.project_link);
   const safeSourceLink = isAllowedUrl(p.source_code_link);
@@ -315,8 +315,8 @@ const buildTextContent = (p, keyPointsByProjectId, techByProjectId, options = {}
   }
 
   const titleEl = safeProjectLink && titleAsLink
-    ? el("a", { class: "flex flex-wrap gap-2 shrink-0", href: safeProjectLink })
-    : el("div", { class: "flex flex-wrap gap-2 shrink-0" });
+    ? el("a", { class: "flex flex-wrap gap-2 shrink-0 mt-3", href: safeProjectLink })
+    : el("div", { class: "flex flex-wrap gap-2 shrink-0 mt-3" });
   titleEl.addEventListener("click", (event) => {
     if (titleAsLink) event.stopPropagation();
   });
@@ -412,7 +412,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const collapsedContent = buildTextContent(p, keyPointsByProjectId, techByProjectId, {
     titleAsLink: false,
     includeButtons: false,
-    titleClass: "text-lg font-medium text-gray-900 mt-3",
+    titleClass: "text-lg font-medium text-gray-900",
   });
   collapsed.appendChild(collapsedContent.container);
 
