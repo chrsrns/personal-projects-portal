@@ -261,7 +261,7 @@ const createRow = (cells) => {
   return row;
 };
 
-const collapseCard = (id) => {
+const collapseCard = (id, scrollToCell = false) => {
   if (id == null) return;
   const data = projectCellsById.get(String(id));
   if (!data) return;
@@ -281,6 +281,11 @@ const collapseCard = (id) => {
   if (data.overlay) {
     data.overlay.classList.remove("opacity-100");
     data.overlay.classList.add("opacity-0");
+  }
+
+  if (scrollToCell) {
+    const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    data.cell.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
   }
 
   expandedProjectId = null;
@@ -529,7 +534,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
 
   cell.addEventListener("click", () => {
     const cellId = String(p.id);
-    if (expandedProjectId === cellId) collapseCard(cellId);
+    if (expandedProjectId === cellId) collapseCard(cellId, true);
     else expandCard(cellId);
   });
 
@@ -537,7 +542,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault && event.preventDefault();
       const cellId = String(p.id);
-      if (expandedProjectId === cellId) collapseCard(cellId);
+      if (expandedProjectId === cellId) collapseCard(cellId, true);
       else expandCard(cellId);
     }
   });
@@ -728,7 +733,7 @@ if (document.readyState === "loading") {
 document.addEventListener("click", (event) => {
   const rows = document.querySelector(".rows");
   if (rows && !rows.contains(event.target)) {
-    collapseCard(expandedProjectId);
+    collapseCard(expandedProjectId, true);
   }
 });
 
