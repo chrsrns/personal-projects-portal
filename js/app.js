@@ -324,7 +324,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const safeProjectLink = isAllowedUrl(p.project_link);
   const safeSourceLink = isAllowedUrl(p.source_code_link);
   const safeImageUrl = isAllowedUrl(p.image_url);
-  const safeVideoUrl = isAllowedUrl(p.video);
+  const safeVideoUrl = isAllowedUrl(p.video_url);
 
   const noPreview = !safeProjectLink;
 

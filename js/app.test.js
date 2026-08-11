@@ -394,13 +394,14 @@ test("project image is contained, square, and centered", () => {
 
 test("project video URL is allow-listed before src", () => {
   const { app } = setup();
-  const validProject = { id: 1, project_name: "Valid", video: "https://example.com/video.mp4" };
+
+  const validProject = { id: 1, project_name: "Valid", video_url: "https://example.com/video.mp4" };
   const { video, safeVideoUrl } = app.createProjectCard(validProject, {}, {});
   assert.ok(video, "valid video project should have a video element");
   assert.strictEqual(safeVideoUrl, "https://example.com/video.mp4", "safeVideoUrl should be set to an allowed URL");
   assert.strictEqual(video.src, "", "video src should not be set until the card is expanded");
 
-  const invalidProject = { id: 2, project_name: "Invalid", video: "javascript:alert(1)" };
+  const invalidProject = { id: 3, project_name: "Invalid", video_url: "javascript:alert(1)" };
   const { video: video2, safeVideoUrl: safeVideoUrl2 } = app.createProjectCard(invalidProject, {}, {});
   assert.ok(video2, "invalid video project should still keep a video element placeholder");
   assert.strictEqual(safeVideoUrl2, null, "unsafe video URL should not pass the allow-list");
@@ -468,7 +469,7 @@ test("clicking expanded title link does not collapse card and preserves href", (
 
 test("clicking expanded video does not collapse card", () => {
   const { app, grid } = setup();
-  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card, video } = app.createProjectCard(project, {}, {});
   grid.appendChild(card);
 
@@ -497,7 +498,7 @@ test("expanded card spans full grid row and uses flex layout", () => {
 
 test("video lazy-loads on expand and falls back to image on error", () => {
   const { app, grid } = setup();
-  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card, img, video } = app.createProjectCard(project, {}, {});
   grid.appendChild(card);
 
@@ -515,7 +516,7 @@ test("video lazy-loads on expand and falls back to image on error", () => {
   assert.ok(!video.classList.contains("hidden"), "video should be shown on canplay");
   assert.ok(video._played > 0, "video should attempt to play when it can");
 
-  const errorProject = { id: 2, project_name: "E", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const errorProject = { id: 2, project_name: "E", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card: card2, img: img2, video: video2 } = app.createProjectCard(errorProject, {}, {});
   grid.appendChild(card2);
   card2.click();
@@ -527,7 +528,7 @@ test("video lazy-loads on expand and falls back to image on error", () => {
 
 test("video playback is controlled on expand, collapse, and visibility change", () => {
   const { app, doc, grid } = setup();
-  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card, video } = app.createProjectCard(project, {}, {});
   grid.appendChild(card);
 
@@ -551,7 +552,7 @@ test("video playback is controlled on expand, collapse, and visibility change", 
 
 test("keyboard and reduced motion are supported", () => {
   const { app, win } = setup();
-  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card, video } = app.createProjectCard(project, {}, {});
 
   assert.strictEqual(card.getAttribute("role"), "button", "collapsed card should have role button");
@@ -578,7 +579,7 @@ test("keyboard and reduced motion are supported", () => {
 
 test("reduced motion pauses video on canplay", () => {
   const { app, win } = setup();
-  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
   const { card, video, img } = app.createProjectCard(project, {}, {});
 
   win.reducedMotion = true;
@@ -645,7 +646,7 @@ test("card has transition classes and re-layouts on resize", () => {
 
 test("video uses object-contain within its half", () => {
   const { app } = setup();
-  const project = { id: 1, project_name: "P", video: "https://example.com/video.mp4" };
+  const project = { id: 1, project_name: "P", video_url: "https://example.com/video.mp4" };
   const { video } = app.createProjectCard(project, {}, {});
   assert.ok(video.classList.contains("object-contain"), "video should use object-contain");
 });
