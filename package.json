@@ -16,7 +16,7 @@
   "author": "Christian Louise B. Aranas",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test js/app.test.js js/urlUtils.test.js",
     "build:css": "npx tailwindcss -i input.css -o css/style.css",
     "prebuild": "npm run build:css",
     "prestart": "npm run build:css",

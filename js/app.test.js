@@ -307,9 +307,12 @@ class MockDocument extends MockElement {
 
 function createMockWindow(doc) {
   let reduced = false;
-  return {
+  const win = {
     location: { protocol: "http:", host: "localhost" },
     __CONFIG__: { API_BASE_URL: "/api", RESUME_ID: 192 },
+    _opened: null,
+    _openTarget: null,
+    open(url, target) { win._opened = url; win._openTarget = target; },
     matchMedia(query) {
       return { matches: query === "(prefers-reduced-motion: reduce)" && reduced };
     },
@@ -325,6 +328,7 @@ function createMockWindow(doc) {
       doc.dispatchEvent(event);
     },
   };
+  return win;
 }
 
 function createMockFetch() {
@@ -774,4 +778,204 @@ test("overlay hides on collapse and ignores pause and visibilitychange", () => {
   doc.hidden = false;
   doc.dispatchDocEvent("visibilitychange");
   assert.ok(overlay.classList.contains("opacity-0"), "visibilitychange visible should not show overlay");
+});
+
+test("expanded card shows Live Demo and View Code buttons when both links are present", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const buttons = contentDiv.querySelectorAll("button");
+  assert.strictEqual(buttons.length, 2, "expanded card should have two buttons");
+  assert.strictEqual(buttons[0].textContent, "Live Demo", "first button should be Live Demo");
+  assert.strictEqual(buttons[1].textContent, "View Code", "second button should be View Code");
+  assert.ok(!buttons[0].hasAttribute("disabled"), "Live Demo should be enabled");
+  assert.ok(!buttons[1].hasAttribute("disabled"), "View Code should be enabled");
+});
+
+test("missing project_link disables Live Demo and relabels", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const [live, code] = contentDiv.querySelectorAll("button");
+  assert.ok(live, "Live Demo button should exist");
+  assert.ok(code, "View Code button should exist");
+  assert.strictEqual(live.textContent, "No project link");
+  assert.strictEqual(live.getAttribute("disabled"), "", "Live Demo should be disabled");
+  assert.strictEqual(code.textContent, "View Code");
+  assert.ok(!code.hasAttribute("disabled"), "View Code should be enabled");
+});
+
+test("missing source_code_link disables View Code and relabels", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const [live, code] = contentDiv.querySelectorAll("button");
+  assert.ok(live, "Live Demo button should exist");
+  assert.ok(code, "View Code button should exist");
+  assert.strictEqual(live.textContent, "Live Demo");
+  assert.ok(!live.hasAttribute("disabled"), "Live Demo should be enabled");
+  assert.strictEqual(code.textContent, "No source code link");
+  assert.strictEqual(code.getAttribute("disabled"), "", "View Code should be disabled");
+});
+
+test("both links missing shows two disabled buttons", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P" };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const [live, code] = contentDiv.querySelectorAll("button");
+  assert.ok(live, "Live Demo button should exist");
+  assert.ok(code, "View Code button should exist");
+  assert.strictEqual(live.textContent, "No project link");
+  assert.strictEqual(live.getAttribute("disabled"), "", "Live Demo should be disabled");
+  assert.strictEqual(code.textContent, "No source code link");
+  assert.strictEqual(code.getAttribute("disabled"), "", "View Code should be disabled");
+});
+
+test("unsafe URL schemes disable buttons", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "javascript:alert(1)",
+    source_code_link: "data:text/html,<script>alert(1)</script>",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const [live, code] = contentDiv.querySelectorAll("button");
+  assert.ok(live, "Live Demo button should exist");
+  assert.ok(code, "View Code button should exist");
+  assert.strictEqual(live.textContent, "No project link");
+  assert.strictEqual(live.getAttribute("disabled"), "", "Live Demo should be disabled");
+  assert.strictEqual(code.textContent, "No source code link");
+  assert.strictEqual(code.getAttribute("disabled"), "", "View Code should be disabled");
+});
+
+test("clicking Live Demo opens project link and keeps card expanded", () => {
+  const { app, grid, win } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const live = contentDiv.querySelectorAll("button")[0];
+  live.click();
+  assert.strictEqual(win._opened, "https://example.com/project", "Live Demo should open project link");
+  assert.strictEqual(win._openTarget, "_blank", "Live Demo should open in a new tab");
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should stay expanded");
+});
+
+test("clicking View Code opens source link and keeps card expanded", () => {
+  const { app, grid, win } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const code = contentDiv.querySelectorAll("button")[1];
+  code.click();
+  assert.strictEqual(win._opened, "https://github.com/example/repo", "View Code should open source link");
+  assert.strictEqual(win._openTarget, "_blank", "View Code should open in a new tab");
+  assert.strictEqual(card.getAttribute("aria-expanded"), "true", "card should stay expanded");
+});
+
+test("buttons are not rendered when card is collapsed", () => {
+  const { app } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { contentDiv } = app.createProjectCard(project, {}, {});
+  assert.strictEqual(contentDiv.querySelectorAll("button").length, 0, "collapsed card should have no buttons");
+});
+
+test("buttons are removed on collapse", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+  assert.strictEqual(contentDiv.querySelectorAll("button").length, 2, "buttons should appear on expand");
+
+  card.click();
+  assert.strictEqual(contentDiv.querySelectorAll("button").length, 0, "buttons should be removed on collapse");
+});
+
+test("expanded title link remains when buttons are present", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const h3 = contentDiv.querySelector("h3");
+  assert.ok(h3, "title heading should exist");
+  assert.strictEqual(h3.parentNode.tagName, "A", "title should still be a link");
+  assert.strictEqual(h3.parentNode.getAttribute("href"), "https://example.com/project", "title link should still point to project link");
+});
+
+test("buttons are the last children of the content div", () => {
+  const { app, grid } = setup();
+  const project = {
+    id: 1,
+    project_name: "P",
+    project_link: "https://example.com/project",
+    source_code_link: "https://github.com/example/repo",
+  };
+  const { card, contentDiv } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+  card.click();
+
+  const buttons = contentDiv.querySelectorAll("button");
+  const children = Array.from(contentDiv.children);
+  assert.strictEqual(children[children.length - 2], buttons[0], "Live Demo should be second-to-last child");
+  assert.strictEqual(children[children.length - 1], buttons[1], "View Code should be last child");
 });
