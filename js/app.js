@@ -274,7 +274,6 @@ const collapseCard = (id) => {
     data.video.src = "";
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
-    data.spinner.classList.add("hidden");
     if (data.overlay) {
       data.overlay.classList.remove("opacity-100");
       data.overlay.classList.add("opacity-0");
@@ -309,7 +308,6 @@ const expandCard = (id) => {
 
   if (data.safeVideoUrl) {
     data.video.src = data.safeVideoUrl;
-    data.spinner.classList.remove("hidden");
     data.video.classList.add("hidden");
     data.img.classList.remove("hidden");
     if (data.overlay) {
@@ -356,13 +354,6 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   });
   mediaWrapper.appendChild(img);
 
-  const spinner = el("div", {
-    class: "absolute inset-0 hidden items-center justify-center text-sm text-gray-500"
-  }, [
-    el("span", { text: "Loading video…" })
-  ]);
-  mediaWrapper.appendChild(spinner);
-
   const video = el("video", {
     class: "hidden h-full w-full object-contain",
     muted: true,
@@ -391,7 +382,6 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   video.addEventListener("canplay", () => {
     video.classList.remove("hidden");
     img.classList.add("hidden");
-    spinner.classList.add("hidden");
     if (overlay) {
       overlay.classList.remove("opacity-100");
       overlay.classList.add("opacity-0");
@@ -404,7 +394,6 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   });
 
   video.addEventListener("error", () => {
-    spinner.classList.add("hidden");
     video.classList.add("hidden");
     img.classList.remove("hidden");
     if (overlay) {
@@ -489,7 +478,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   card.appendChild(scrollAnchor);
   card.appendChild(article);
 
-  const cardData = { card, article, mediaWrapper, img, video, spinner, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
+  const cardData = { card, article, mediaWrapper, img, video, overlay, scrollAnchor, contentDiv, titleContainer, titleLink, titleChildren, safeProjectLink, safeVideoUrl };
   projectCardsById.set(String(p.id), cardData);
 
   card.addEventListener("click", () => {
@@ -507,7 +496,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     }
   });
 
-  return { card, img, video, spinner, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
+  return { card, img, video, overlay, mediaWrapper, titleLink, contentDiv, scrollAnchor, safeVideoUrl };
 };
 
 const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {

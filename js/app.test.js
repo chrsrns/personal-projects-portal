@@ -720,6 +720,16 @@ test("overlay fades in on expand and out on canplay or error", () => {
   assert.ok(overlay2.classList.contains("opacity-0"), "overlay should fade out on error");
 });
 
+test("old text spinner is not rendered", () => {
+  const { app, grid } = setup();
+  const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
+  const { card } = app.createProjectCard(project, {}, {});
+  grid.appendChild(card);
+
+  const oldSpinner = card.querySelector(".text-gray-500");
+  assert.strictEqual(oldSpinner, null, "old 'Loading video…' text spinner should not exist");
+});
+
 test("overlay hides on collapse and ignores pause and visibilitychange", () => {
   const { app, grid, doc } = setup();
   const project = { id: 1, project_name: "P", project_link: "https://example.com/project", video_url: "https://example.com/video.mp4" };
