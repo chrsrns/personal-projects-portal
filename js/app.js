@@ -478,20 +478,24 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   // Expanded-only action buttons
   const projectBtn = el("button", {
     type: "button",
-    text: "Live Demo",
-    class: "mt-4 mr-2 rounded-md px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+    text: safeProjectLink ? "Live Demo" : "No project link",
+    class: "mt-4 mr-2 rounded-md px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed",
+    disabled: safeProjectLink ? undefined : ""
   });
   projectBtn.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (safeProjectLink) window.open(safeProjectLink, "_blank");
   });
 
   const sourceBtn = el("button", {
     type: "button",
-    text: "View Code",
-    class: "mt-4 rounded-md px-4 py-2 text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+    text: safeSourceLink ? "View Code" : "No source code link",
+    class: "mt-4 rounded-md px-4 py-2 text-sm font-medium text-white bg-gray-700 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed",
+    disabled: safeSourceLink ? undefined : ""
   });
   sourceBtn.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (safeSourceLink) window.open(safeSourceLink, "_blank");
   });
 
   article.appendChild(mediaWrapper);
