@@ -227,6 +227,32 @@ const el = (tag, attrs = {}, children = []) => {
 const projectCellsById = new Map();
 let expandedProjectId = null;
 
+const isReducedMotion = () =>
+  window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const syncProjectVideo = (data, shouldPlay = false) => {
+  if (!data.video) return;
+  const canPlay = data.video.readyState >= 3;
+  if (canPlay) {
+    data.video.classList.remove("hidden");
+    if (data.img) data.img.classList.add("hidden");
+    if (data.overlay) {
+      data.overlay.classList.remove("opacity-100");
+      data.overlay.classList.add("opacity-0");
+    }
+    if (shouldPlay && !isReducedMotion()) {
+      data.video.play();
+    }
+  } else {
+    data.video.classList.add("hidden");
+    if (data.img) data.img.classList.remove("hidden");
+    if (data.overlay) {
+      data.overlay.classList.remove("opacity-0");
+      data.overlay.classList.add("opacity-100");
+    }
+  }
+};
+
 const createRow = (cells) => {
   const row = el("div", { class: "row" });
   for (const cell of cells) {
@@ -249,7 +275,6 @@ const collapseCard = (id) => {
 
   if (data.video) {
     data.video.pause();
-    data.video.src = "";
     data.video.classList.add("hidden");
   }
   if (data.img) data.img.classList.remove("hidden");
@@ -281,15 +306,8 @@ const expandCard = (id) => {
   if (data.techWrap) data.techWrap.classList.add("mt-6");
 
   if (data.safeVideoUrl && data.video) {
-    data.video.src = data.safeVideoUrl;
-    data.video.classList.add("hidden");
-    if (data.img) data.img.classList.remove("hidden");
-    if (data.overlay) {
-      data.overlay.classList.remove("opacity-0");
-      data.overlay.classList.add("opacity-100");
-    }
-    const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduced) data.video.play();
+    if (!data.video.src) data.video.src = data.safeVideoUrl;
+    syncProjectVideo(data, true);
   }
 
   const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -439,7 +457,6 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     controls: true,
     loop: true,
     playsinline: true,
-    autoplay: true,
   });
   mediaWrapper.appendChild(video);
   video.addEventListener("click", (event) => {
@@ -455,29 +472,20 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     : null;
   if (overlay) mediaWrapper.appendChild(overlay);
 
-  const isReducedMotion = () =>
-    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
   video.addEventListener("canplay", () => {
-    video.classList.remove("hidden");
-    img.classList.add("hidden");
-    if (overlay) {
-      overlay.classList.remove("opacity-100");
-      overlay.classList.add("opacity-0");
-    }
-    if (isReducedMotion()) {
-      video.pause();
-    } else {
-      video.play();
-    }
+    const data = projectCellsById.get(cell.getAttribute("data-project-id"));
+    if (!data || data.cell.getAttribute("aria-expanded") !== "true") return;
+    syncProjectVideo(data, true);
   });
 
   video.addEventListener("error", () => {
-    video.classList.add("hidden");
-    img.classList.remove("hidden");
-    if (overlay) {
-      overlay.classList.remove("opacity-100");
-      overlay.classList.add("opacity-0");
+    const data = projectCellsById.get(cell.getAttribute("data-project-id"));
+    if (!data || data.cell.getAttribute("aria-expanded") !== "true") return;
+    data.video.classList.add("hidden");
+    if (data.img) data.img.classList.remove("hidden");
+    if (data.overlay) {
+      data.overlay.classList.remove("opacity-100");
+      data.overlay.classList.add("opacity-0");
     }
   });
 
