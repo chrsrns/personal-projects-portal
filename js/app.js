@@ -418,7 +418,7 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
   const safeVideoUrl = isAllowedUrl(p.video_url);
 
   const cell = el("article", {
-    class: "cell rounded-lg glow-on-hover shadow-xl transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 motion-reduce:transition-none",
+    class: "cell rounded-lg glow-on-hover shadow-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-2xl motion-reduce:transition-none",
     tabindex: "0",
     role: "button",
     "aria-expanded": "false",
@@ -443,6 +443,21 @@ const createProjectCard = (p, keyPointsByProjectId, techByProjectId) => {
     titleClass: "text-lg font-medium text-gray-900",
   });
   collapsed.appendChild(collapsedContent.container);
+
+  const chevron = el("div", { class: "mt-auto flex justify-end" }, [
+    el("svg", {
+      class: "w-6 h-6 text-gray-400 pointer-events-none",
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      "stroke-width": "2",
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+    }, [
+      el("polyline", { points: "6 9 12 15 18 9" }),
+    ]),
+  ]);
+  collapsed.appendChild(chevron);
 
   // Expanded view
   const expanded = el("div", { class: "expanded h-full flex flex-col lg:flex-row" });
