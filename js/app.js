@@ -226,9 +226,32 @@ const el = (tag, attrs = {}, children = []) => {
 
 const projectCellsById = new Map();
 let expandedProjectId = null;
+let tapHintShown = false;
 
 const isReducedMotion = () =>
   window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const HAND_SVG = `<?xml version="1.0" ?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools --><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto"><path d="M20 21V19C20 16.7909 18.2091 15 16 15H15C14.4477 15 14 14.5523 14 14V9C14 7.89543 13.1046 7 12 7V7C10.8954 7 10 7.89543 10 9V18L7.6 14.8C7.22229 14.2964 6.62951 14 6 14H5.56619C4.70121 14 4 14.7012 4 15.5662V15.5662C4 15.8501 4.07715 16.1286 4.22319 16.372L7 21" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M12 4V3" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M18 10L19 10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M5 10L6 10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M7.34334 5.34309L6.63623 4.63599" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/><path d="M16.6567 5.34309L17.3638 4.63599" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>`;
+
+const showTapHint = (cell) => {
+  if (tapHintShown || cell == null) return;
+  if (isReducedMotion()) return;
+
+  tapHintShown = true;
+
+  const overlay = el("div", { class: "tap-hint" }, [
+    el("div", { class: "tap-hint__hand", html: HAND_SVG }),
+  ]);
+  cell.appendChild(overlay);
+
+  const removeHint = () => {
+    if (overlay.parentNode) overlay.remove();
+    cell.removeEventListener("click", removeHint);
+  };
+
+  overlay.addEventListener("animationend", removeHint);
+  cell.addEventListener("click", removeHint);
+};
 
 const syncProjectVideo = (data, shouldPlay = false) => {
   if (!data.video) return;
@@ -600,6 +623,10 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
         projectCellsById.get(String(d.cell.getAttribute("data-project-id"))).row = row;
       }
       container.appendChild(row);
+    }
+
+    if (imageData[0] && !document.querySelector(".cell.expanded")) {
+      showTapHint(imageData[0].cell);
     }
   };
 

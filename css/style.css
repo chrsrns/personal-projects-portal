@@ -792,6 +792,25 @@ video {
   opacity: 1;
 }
 
+.tap-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tap-hint__hand {
+  width: 5rem;
+  height: auto;
+  color: rgb(0 0 0);
+  opacity: 0;
+  transform: translateY(-40%) scale(1);
+  animation: tap-hint 1.5s ease-in-out forwards;
+}
+
 .pointer-events-none {
   pointer-events: none;
 }
@@ -896,6 +915,10 @@ video {
 
 .h-\[1em\] {
   height: 1em;
+}
+
+.h-auto {
+  height: auto;
 }
 
 .h-full {
@@ -1281,6 +1304,43 @@ video {
 }
 
 /* `octocat-wave` keyframe and `github-corner` group are defined in tailwind.config.js and used in index.html. */
+
+@keyframes tap-hint {
+  0% {
+    opacity: 0;
+    transform: translateY(-40%) scale(1);
+  }
+
+  20% {
+    opacity: 0.8;
+    transform: translateY(-10%) scale(1);
+  }
+
+  40% {
+    opacity: 0.9;
+    transform: translateY(10%) scale(0.95);
+  }
+
+  60% {
+    opacity: 0.9;
+    transform: translateY(-5%) scale(1);
+  }
+
+  80% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-40%) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-hint {
+    display: none !important;
+  }
+}
 
 .glow-on-hover:before {
   background-image: linear-gradient(
