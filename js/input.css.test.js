@@ -33,3 +33,45 @@ test("1fr tracks clamped to minmax(0, 1fr)", () => {
     "expanded cell rows should use 0fr minmax(0, 1fr)"
   );
 });
+
+test("tap-hint keyframes run for 1.5s", () => {
+  assert.match(
+    INPUT_CSS,
+    /@keyframes\s+tap-hint\s*\{/,
+    "@keyframes tap-hint should exist in input.css"
+  );
+  assert.match(
+    INPUT_CSS,
+    /animation:\s*tap-hint\s+1\.5s/i,
+    "tap-hint animation should run for 1.5s"
+  );
+});
+
+test("tap-hint hidden when reduced motion is requested", () => {
+  assert.match(
+    INPUT_CSS,
+    /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[^}]*\.tap-hint\s*\{\s*[^}]*display:\s*none/i,
+    ".tap-hint should be hidden under prefers-reduced-motion: reduce"
+  );
+});
+
+test("tap-hint overlay does not intercept pointer events", () => {
+  assert.match(
+    INPUT_CSS,
+    /\.tap-hint\s*\{[^}]*pointer-events:\s*none/i,
+    ".tap-hint should use pointer-events: none"
+  );
+});
+
+test("tap-hint uses an inline SVG/CSS shape, not an external image", () => {
+  assert.match(
+    INPUT_CSS,
+    /\.tap-hint__hand\s*\{/,
+    ".tap-hint__hand styles should exist"
+  );
+  assert.doesNotMatch(
+    INPUT_CSS,
+    /\.tap-hint__hand[^{]*\{[^}]*url\s*\(/i,
+    ".tap-hint__hand should not load an external image"
+  );
+});
