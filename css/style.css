@@ -656,7 +656,7 @@ video {
 
 .cell {
   display: grid;
-  grid-template-rows: 1fr 0fr;
+  grid-template-rows: minmax(0, 1fr) 0fr;
   transition: grid-template-rows 0.4s ease;
   min-height: 0;
   cursor: pointer;
@@ -664,7 +664,15 @@ video {
 }
 
 .cell.expanded {
-  grid-template-rows: 0fr 1fr;
+  grid-template-rows: 0fr minmax(0, 1fr);
+}
+
+.cell .expanded > * {
+  display: none;
+}
+
+.cell.expanded .expanded > * {
+  display: flex;
 }
 
 .cell .collapsed,
