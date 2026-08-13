@@ -289,8 +289,24 @@ const collapseCard = (id, scrollToCell = false) => {
   const data = projectCellsById.get(String(id));
   if (!data) return;
 
+  const finishCollapse = (event) => {
+    if (event && event.propertyName && event.propertyName !== "grid-template-rows") return;
+    data.cell.classList.remove("collapsing");
+    data.cell.removeEventListener("transitionend", finishCollapse);
+    if (scrollToCell) {
+      const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      data.cell.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
+    }
+    if (expandedProjectId === id) expandedProjectId = null;
+  };
+
+  if (!data.cell.classList.contains("expanded")) {
+    finishCollapse();
+    return;
+  }
+
   data.cell.setAttribute("aria-expanded", "false");
-  data.cell.classList.remove("expanded");
+  data.cell.classList.add("collapsing");
   data.row.classList.remove("expanded-1", "expanded-2", "expanded-3");
 
   if (data.titleEl) data.titleEl.classList.remove("mb-6");
@@ -306,12 +322,14 @@ const collapseCard = (id, scrollToCell = false) => {
     data.overlay.classList.add("opacity-0");
   }
 
-  if (scrollToCell) {
-    const scrollReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    data.cell.scrollIntoView({ behavior: scrollReduced ? "auto" : "smooth", block: "start" });
+  data.cell.classList.remove("expanded");
+
+  if (isReducedMotion()) {
+    finishCollapse();
+    return;
   }
 
-  expandedProjectId = null;
+  data.cell.addEventListener("transitionend", finishCollapse);
 };
 
 const expandCard = (id) => {

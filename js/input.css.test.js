@@ -21,6 +21,14 @@ test("expanded .expanded children shown", () => {
   );
 });
 
+test("collapsing card keeps expanded children visible during transition", () => {
+  assert.match(
+    INPUT_CSS,
+    /\.cell\.collapsing\s+\.expanded\s*>\s*\*\s*\{\s*display:\s*flex;?/,
+    ".cell.collapsing .expanded > * should display: flex while the grid track is collapsing"
+  );
+});
+
 test("1fr tracks clamped to minmax(0, 1fr)", () => {
   assert.match(
     INPUT_CSS,

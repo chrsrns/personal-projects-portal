@@ -46,6 +46,10 @@
     display: none;
   }
 
+  .cell.collapsing .expanded > * {
+    display: flex;
+  }
+
   .cell.expanded .expanded > * {
     display: flex;
   }
