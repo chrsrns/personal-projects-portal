@@ -2,6 +2,7 @@ const { test } = require("node:test");
 const assert = require("node:assert");
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 
 const APP_PATH = path.resolve(__dirname, "app.js");
 
@@ -1034,4 +1035,35 @@ test("buttons are wrapped at the end of the content div", () => {
   assert.strictEqual(buttons.length, 2, "wrapper should contain two buttons");
   assert.strictEqual(buttons[0].textContent, "Live Demo", "Live Demo should be first in wrapper");
   assert.strictEqual(buttons[1].textContent, "View Code", "View Code should be second in wrapper");
+});
+
+test("app source runs as a browser script without require or module", () => {
+  const code = fs.readFileSync(APP_PATH, "utf8");
+
+  const doc = new MockDocument();
+  doc.readyState = "complete";
+  const win = createMockWindow(doc);
+  doc._window = win;
+
+  const rows = new MockElement("div", { class: "rows" });
+  const overlay = new MockElement("div", { id: "projectsPlaceholderOverlay", class: "overlay-placeholder" });
+  rows.appendChild(overlay);
+  doc.appendChild(rows);
+
+  const sandbox = {};
+  for (const key of Object.getOwnPropertyNames(globalThis)) {
+    if (["global", "globalThis", "require", "module", "exports", "__filename", "__dirname"].includes(key)) {
+      continue;
+    }
+    sandbox[key] = globalThis[key];
+  }
+  sandbox.window = win;
+  sandbox.document = doc;
+  sandbox.fetch = createMockFetch();
+  sandbox.WebSocket = MockWebSocket;
+  sandbox.SVGElement = MockSVGElement;
+
+  assert.doesNotThrow(() => {
+    vm.runInNewContext(code, sandbox);
+  }, "app.js should not throw when loaded as a browser script");
 });
