@@ -16,7 +16,11 @@
   "author": "Christian Louise B. Aranas",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test js/app.test.js js/urlUtils.test.js js/input.css.test.js",
+    "build:css": "npx tailwindcss -i input.css -o css/style.css",
+    "prebuild": "npm run build:css",
+    "prestart": "npm run build:css",
+    "verify:css": "npx tailwindcss -i input.css -o /tmp/style-verify.css && diff -q css/style.css /tmp/style-verify.css && ! grep -F -e 'this-is' -e 'weird-and-invalid' -e '336699' /tmp/style-verify.css",
     "start": "webpack serve --open --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js"
   },

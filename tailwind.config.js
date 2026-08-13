@@ -1,8 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./**/*.{html,js}"],
+  content: [
+    "./**/*.{html,js}",
+    "!./node_modules/**",
+    "!./src/**",
+    "!./dist/**",
+    "!./docs/**",
+    "!./js/*.test.js",
+  ],
   theme: {
     extend: {
+      gridColumn: {
+        full: "1 / -1",
+      },
       animation: {
         "octocat-wave": "octocat-wave 560ms ease-in-out",
         rainbow: "glowing 10s linear infinite",
