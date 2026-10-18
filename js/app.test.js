@@ -1238,3 +1238,41 @@ test("WebSocket subscribe sends resume_id as UUID string", async () => {
   assert.strictEqual(ws._sent[0].type, "subscribe");
   assert.strictEqual(ws._sent[0].resume_id, VALID_UUID);
 });
+
+test("resume.changed for another resume_id is skipped", async () => {
+  const { doc } = setup();
+  const fetchMock = makeFetch([]);
+  global.fetch = fetchMock;
+
+  doc.dispatchDocEvent("DOMContentLoaded");
+  await flushAsync();
+  fetchMock.calls.count = 0;
+
+  MockWebSocket.instances[0].simulateMessage({
+    type: "resume.changed",
+    resume_id: OTHER_UUID,
+    action: { updated: "projects" },
+  });
+  await flushAsync();
+
+  assert.strictEqual(fetchMock.calls.count, 0, "event for a different resume should not refetch");
+});
+
+test("resume.changed for the configured resume refreshes", async () => {
+  const { doc } = setup();
+  const fetchMock = makeFetch([]);
+  global.fetch = fetchMock;
+
+  doc.dispatchDocEvent("DOMContentLoaded");
+  await flushAsync();
+  fetchMock.calls.count = 0;
+
+  MockWebSocket.instances[0].simulateMessage({
+    type: "resume.changed",
+    resume_id: VALID_UUID,
+    action: { updated: "projects" },
+  });
+  await flushAsync();
+
+  assert.ok(fetchMock.calls.count > 0, "matching event should trigger a refetch");
+});

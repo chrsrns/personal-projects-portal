@@ -19,8 +19,14 @@ const isAllowedUrl = (url) => {
 ////////////////////////////////////////////////////////
 
 const handleResumeChange = (event) => {
-  console.log(`Resume ${event.resume_id} changed:`, event.action);
   const { apiBaseUrl, resumeId } = getConfig();
+
+  if (event.resume_id !== resumeId) {
+    console.log(`Ignoring resume.changed for ${event.resume_id}`);
+    return;
+  }
+
+  console.log(`Resume ${event.resume_id} changed:`, event.action);
 
   if (event.action === null || typeof event.action !== 'object' || !('updated' in event.action)) {
     return;
