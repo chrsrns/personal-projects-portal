@@ -120,14 +120,20 @@ const createWebSocketWithReconnect = (apiBaseUrl, resumeId, authToken = null) =>
 // API Access Helpers
 ////////////////////////////////////////////////////////
 
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const NIL_UUID = "00000000-0000-0000-0000-000000000000";
+
 const getConfig = () => {
   const cfg = window.__CONFIG__ || {};
+  const rawId = cfg.RESUME_ID;
+  let resumeId = null;
+  if (typeof rawId === "string" && UUID_RE.test(rawId)) {
+    const normalized = rawId.toLowerCase();
+    resumeId = normalized === NIL_UUID ? null : normalized;
+  }
   return {
     apiBaseUrl: typeof cfg.API_BASE_URL === "string" ? cfg.API_BASE_URL : "/api",
-    resumeId:
-      typeof cfg.RESUME_ID === "number"
-        ? cfg.RESUME_ID
-        : Number.parseInt(String(cfg.RESUME_ID || "1"), 10),
+    resumeId,
   };
 };
 
@@ -197,6 +203,25 @@ const reAddSectionPlaceholder = (sectionEl) => {
     }
   }
 }
+
+const hideSectionPlaceholder = (sectionEl) => {
+  for (const child of Array.from(sectionEl.children)) {
+    if (child.classList.contains("overlay-placeholder")) {
+      child.classList.add('hidden');
+    }
+  }
+};
+
+const showInitError = () => {
+  const container = document.querySelector('.rows');
+  if (!container) return;
+  hideSectionPlaceholder(container);
+  if (container.querySelector('.row')) return;
+  if (container.querySelector('.init-error')) return;
+  container.appendChild(
+    el("div", { class: "init-error p-8 text-center text-gray-500", text: "Unable to load projects." })
+  );
+};
 
 const el = (tag, attrs = {}, children = []) => {
   const svgTags = new Set([
@@ -671,6 +696,7 @@ const renderProjects = (projects, keyPointsByProjectId, techByProjectId) => {
 
 const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
   const container = document.querySelector('.rows');
+  if (!container) return;
   reAddSectionPlaceholder(container);
 
   try {
@@ -704,6 +730,7 @@ const refreshPortfolioProjects = async (apiBaseUrl, resumeId) => {
     renderProjects(projects, projectKeyPointsById, projectTechById);
   } catch (error) {
     console.error('Failed to refresh portfolio projects:', error);
+    showInitError();
   }
 };
 
@@ -784,10 +811,13 @@ const generateSkeletonPlaceholders = () => {
 };
 
 const onReady = async () => {
-  generateSkeletonPlaceholders();
-
   const { apiBaseUrl, resumeId } = getConfig();
-  if (!Number.isFinite(resumeId)) return;
+  if (resumeId === null) {
+    showInitError();
+    return;
+  }
+
+  generateSkeletonPlaceholders();
 
   try {
     await refreshPortfolioProjects(apiBaseUrl, resumeId);
@@ -823,5 +853,12 @@ document.addEventListener("visibilitychange", () => {
 });
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { renderProjects, createProjectCard };
+  module.exports = {
+    renderProjects,
+    createProjectCard,
+    getConfig,
+    onReady,
+    handleWebSocketMessage,
+    refreshPortfolioProjects,
+  };
 }

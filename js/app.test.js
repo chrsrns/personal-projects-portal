@@ -315,7 +315,7 @@ function createMockWindow(doc) {
   let reduced = false;
   const win = {
     location: { protocol: "http:", host: "localhost" },
-    __CONFIG__: { API_BASE_URL: "/api", RESUME_ID: 192 },
+    __CONFIG__: { API_BASE_URL: "/api", RESUME_ID: "11111111-1111-4111-8111-111111111111" },
     _opened: null,
     _openTarget: null,
     open(url, target) { win._opened = url; win._openTarget = target; },
@@ -346,11 +346,30 @@ function createMockFetch() {
 }
 
 class MockWebSocket {
-  constructor(url) { this.url = url; }
-  addEventListener() {}
-  removeEventListener() {}
-  send() {}
+  static instances = [];
+  constructor(url) {
+    this.url = url;
+    this._sent = [];
+    this._listeners = new Map();
+    MockWebSocket.instances.push(this);
+  }
+  addEventListener(type, fn) {
+    if (!this._listeners.has(type)) this._listeners.set(type, new Set());
+    this._listeners.get(type).add(fn);
+  }
+  removeEventListener(type, fn) {
+    if (this._listeners.has(type)) this._listeners.get(type).delete(fn);
+  }
+  send(msg) { this._sent.push(JSON.parse(msg)); }
   close() {}
+  simulateOpen() {
+    for (const fn of this._listeners.get("open") || []) fn.call(this, { type: "open" });
+  }
+  simulateMessage(data) {
+    for (const fn of this._listeners.get("message") || []) {
+      fn.call(this, { data: typeof data === "string" ? data : JSON.stringify(data) });
+    }
+  }
 }
 
 function setup() {
@@ -361,7 +380,7 @@ function setup() {
   const body = new MockElement("body");
   const header = new MockElement("header", { class: "bg-gray-50" });
   const main = new MockElement("main", { class: "flex-1 min-h-0 flex flex-col py-6 px-6 sm:px-12 md:px-24" });
-  const grid = new MockElement("div", { class: "relative grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8" });
+  const grid = new MockElement("div", { class: "rows relative grid h-full grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8" });
   const overlay = new MockElement("div", {
     id: "projectsPlaceholderOverlay",
     class: "overlay-placeholder absolute w-full grid grid-cols-1 gap-4 lg:grid-cols-3 lg:gap-8 bg-white overflow-hidden transition-opacity duration-300 opacity-100",
@@ -379,6 +398,7 @@ function setup() {
   global.SVGElement = MockSVGElement;
   global.fetch = createMockFetch();
   global.WebSocket = MockWebSocket;
+  MockWebSocket.instances.length = 0;
 
   if (require.cache[APP_PATH]) delete require.cache[APP_PATH];
   const app = require(APP_PATH);
@@ -1066,4 +1086,155 @@ test("app source runs as a browser script without require or module", () => {
   assert.doesNotThrow(() => {
     vm.runInNewContext(code, sandbox);
   }, "app.js should not throw when loaded as a browser script");
+});
+
+////////////////////////////////////////////////////////
+// RESUME_ID UUID config, error state, event filtering
+////////////////////////////////////////////////////////
+
+const VALID_UUID = "11111111-1111-4111-8111-111111111111";
+const OTHER_UUID = "22222222-2222-4222-8222-222222222222";
+
+const flushAsync = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+const makeFetch = (projects) => {
+  const calls = { count: 0 };
+  const fn = async (url) => {
+    calls.count += 1;
+    return {
+      ok: true,
+      status: 200,
+      async json() {
+        return { body: String(url).endsWith("/portfolio_projects") ? projects : [] };
+      },
+    };
+  };
+  fn.calls = calls;
+  return fn;
+};
+
+const failingFetch = () => {
+  const calls = { count: 0 };
+  const fn = async () => {
+    calls.count += 1;
+    throw new Error("network down");
+  };
+  fn.calls = calls;
+  return fn;
+};
+
+test("getConfig lowercases a valid uppercase RESUME_ID", () => {
+  const { app, win } = setup();
+  win.__CONFIG__.RESUME_ID = "AAAAAAAA-BBBB-4CCC-8DDD-EEEEEEEEEEEE";
+  assert.strictEqual(
+    app.getConfig().resumeId,
+    "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee",
+    "uppercase UUID should normalize to lowercase"
+  );
+});
+
+test("getConfig returns null for invalid RESUME_ID", () => {
+  const { app, win } = setup();
+  for (const bad of [
+    192,
+    "192",
+    "not-a-uuid",
+    "",
+    undefined,
+    null,
+    "00000000-0000-0000-0000-000000000000",
+  ]) {
+    win.__CONFIG__.RESUME_ID = bad;
+    assert.strictEqual(
+      app.getConfig().resumeId,
+      null,
+      `RESUME_ID ${JSON.stringify(bad)} should map to null`
+    );
+  }
+});
+
+test("invalid RESUME_ID shows error and skips fetch and WebSocket", async () => {
+  const { doc, win } = setup();
+  win.__CONFIG__.RESUME_ID = "192";
+  const fetchMock = makeFetch([]);
+  global.fetch = fetchMock;
+
+  doc.dispatchDocEvent("DOMContentLoaded");
+  await flushAsync();
+
+  const rows = doc.querySelector(".rows");
+  const error = rows.querySelector(".init-error");
+  assert.ok(error, "error element should be rendered on invalid config");
+  assert.strictEqual(error.parentNode, rows, "error element should be a direct child of .rows");
+  assert.ok(!error.classList.contains("overlay-placeholder"), "error element should not be an overlay-placeholder");
+  assert.strictEqual(error.id, "", "error element should have no id");
+  assert.strictEqual(fetchMock.calls.count, 0, "no fetch should run on invalid config");
+  assert.strictEqual(MockWebSocket.instances.length, 0, "no WebSocket should open on invalid config");
+});
+
+test("initial fetch failure replaces overlay with error element", async () => {
+  const { doc } = setup();
+  global.fetch = failingFetch();
+
+  doc.dispatchDocEvent("DOMContentLoaded");
+  await flushAsync();
+
+  const rows = doc.querySelector(".rows");
+  assert.ok(rows.querySelector(".init-error"), "error element should appear after failed init fetch");
+  const overlay = rows.querySelector("#projectsPlaceholderOverlay");
+  assert.ok(overlay.classList.contains("hidden"), "skeleton overlay should be hidden after failure");
+});
+
+test("failed refresh keeps rendered cards, hides overlay, shows no error", async () => {
+  const { app, doc } = setup();
+  global.fetch = makeFetch([{ id: 1, project_name: "P", project_link: "https://example.com/p" }]);
+
+  await app.refreshPortfolioProjects("/api", VALID_UUID);
+  await flushAsync();
+
+  const rows = doc.querySelector(".rows");
+  assert.ok(rows.querySelector(".row"), "cards should be rendered after successful refresh");
+
+  global.fetch = failingFetch();
+  await app.refreshPortfolioProjects("/api", VALID_UUID);
+
+  const overlay = rows.querySelector("#projectsPlaceholderOverlay");
+  assert.ok(overlay.classList.contains("hidden"), "overlay should hide after failed refresh");
+  assert.ok(rows.querySelector(".row"), "last-rendered cards should remain after failed refresh");
+  assert.strictEqual(rows.querySelector(".init-error"), null, "no error element while cards exist");
+});
+
+test("repeated refresh failures append exactly one error element", async () => {
+  const { app, doc } = setup();
+  global.fetch = failingFetch();
+
+  await app.refreshPortfolioProjects("/api", VALID_UUID);
+  await app.refreshPortfolioProjects("/api", VALID_UUID);
+
+  const rows = doc.querySelector(".rows");
+  assert.strictEqual(
+    rows.querySelectorAll(".init-error").length,
+    1,
+    "repeat failures should not duplicate the error element"
+  );
+});
+
+test("refreshPortfolioProjects returns early when .rows is absent", async () => {
+  const { app, doc } = setup();
+  doc.querySelector(".rows").classList.remove("rows");
+  global.fetch = failingFetch();
+  await app.refreshPortfolioProjects("/api", VALID_UUID);
+});
+
+test("WebSocket subscribe sends resume_id as UUID string", async () => {
+  const { doc } = setup();
+  doc.dispatchDocEvent("DOMContentLoaded");
+  await flushAsync();
+
+  const ws = MockWebSocket.instances[0];
+  assert.ok(ws, "WebSocket should be created");
+  ws.simulateOpen();
+  assert.strictEqual(ws._sent.length, 1, "one subscribe message should be sent");
+  assert.strictEqual(ws._sent[0].type, "subscribe");
+  assert.strictEqual(ws._sent[0].resume_id, VALID_UUID);
 });
